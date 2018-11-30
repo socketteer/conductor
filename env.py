@@ -14,4 +14,8 @@ class Env:
     def run(self):
         while self.step():
             self.time += 1
+            if self.max_steps:
+                if self.time >= self.max_steps:
+                    print("step limit ({0}) reached".format(self.max_steps))
+                    return
         print("total steps to reach equilibrium: {0}".format(self.time))
