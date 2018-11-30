@@ -12,28 +12,30 @@ class Event:
         self.description = description
 
     def query(self):
-        print('attempting to', self.description())
-        for predicate in self.preconditions:
+        #print('querying event "{0}"'.format(self.description()))
+        '''for predicate in self.preconditions:
             if predicate.definition():
-                print(predicate.true_description())
+                pass
+                #print(predicate.true_description())
             else:
                 print(predicate.false_description(), 'so the event "{0}" does not occur'.format(self.description()))
                 return False
         print('event "{0}" occurs'.format(self.description()))
         self.execute()
-        return True
-        '''if all(predicate.definition() is True for predicate in self.preconditions):
+        return True'''
+        if all(predicate.definition() is True for predicate in self.preconditions):
+            print('event "{0}" occurs'.format(self.description()))
             self.execute()
             return True
         else:
-            return False'''
+            return False
 
     def execute(self):
         for effect in self.effects:
             print(effect.description())
             effect.definition()
 
-class Predicate:
+'''class Predicate:
     def __init__(self, truth_value):
         self.set(truth_value)
 
@@ -41,7 +43,7 @@ class Predicate:
         self.truth_value = truth_value
 
     def query(self):
-        return self.truth_value
+        return self.truth_value'''
 
 class Precondition:
     def __init__(self, definition, true_description, false_description):
@@ -49,11 +51,17 @@ class Precondition:
         self.true_description = true_description
         self.false_description = false_description
 
+    def negation(self):
+        return Precondition(lambda: not self.definition(),
+                            self.false_description,
+                            self.true_description)
+
 class Effect:
     def __init__(self, definition, description):
         self.definition = definition
         self.description = description
 
+"""
 hungry = Predicate(True)
 hasfork = Predicate(True)
 cannibal = Predicate(False)
@@ -85,3 +93,4 @@ eat_bob.query()
 evil.set(True)
 
 eat_bob.query()
+"""
