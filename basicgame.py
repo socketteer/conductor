@@ -62,26 +62,32 @@ class Game:
 
     #standardized 0/1/2 target?
     def turn(self):
-        command = sanitize(input('\n>'))
-        action = command[0]
-        if len(command) > 1:
-            target = command[1]
-            if len(command) > 2:
-                target2 = command[2]
-        if len(command) == 1:
-            execute = self.actions[action]
-        elif len(command) == 2:
-            execute = self.actions[action][target]
-        elif len(command) == 3:
-            execute = self.actions[action][target][target2]
-        else:
-            print('invalid input')
+        try:
+            command = sanitize(input('\n>'))
+            action = command[0]
+            if len(command) > 1:
+                target = command[1]
+                if len(command) > 2:
+                    target2 = command[2]
+            if action == 'exit' or action == 'quit':
+                quit()
+            elif len(command) == 1:
+                execute = self.actions[action]
+            elif len(command) == 2:
+                execute = self.actions[action][target]
+            elif len(command) == 3:
+                execute = self.actions[action][target][target2]
+            else:
+                print('invalid input')
+                return self.turn()
+            if not execute.query():
+                print('that is impossible')
+                return self.turn()
+            else:
+                return True
+        except KeyError:
+            print('can\'t')
             return self.turn()
-        if not execute.query():
-            print('that is impossible')
-            return self.turn()
-        else:
-            return True
 
     def run(self):
         self.env.run()

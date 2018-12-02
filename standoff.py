@@ -1,57 +1,34 @@
 from event import *
 
-def threatening_precondition(aggressor, target):
-    return Precondition(lambda: aggressor.pointing_gun_at[target.name],
-                        lambda: "{0} is threatening {1}".format(aggressor.name, target.name),
-                        lambda: "{0} is not threatening {1}".format(aggressor.name, target.name))
-
-def threatening_anyone_precondition(aggressor, others):
-    return Precondition(lambda: any(aggressor.pointing_gun_at[cowboy.name] for cowboy in others),
-                        lambda: "{0} is threatening someone".format(aggressor.name),
-                        lambda: "{0} is not threatening anyone".format(aggressor.name))
-
-def threatened_precondition(target, others):
-    return Precondition(lambda: any(cowboy.pointing_gun_at[target.name] for cowboy in others),
-                        lambda: "{0} is being threatened".format(target.name),
-                        lambda: "{0} is not being threatened".format(target.name))
-
-def alive_precondition(cowboy):
-    return Precondition(lambda: not cowboy.dead,
-                        lambda: "{0} is alive".format(cowboy.name),
-                        lambda: "{0} is dead".format(cowboy.name))
 
 def kill(target, others):
     for cowboy in others:
         cowboy.pointing_gun_at[target.name] = False
     target.die()
+    print('{0} is dead'.format(target.name))
 
-def kill_effect(aggressor, target, others):
-    return Effect(lambda: kill(target, others),
-                  lambda: "{0} is dead, killed by {1}".format(target.name, aggressor.name))
 
 def threaten(aggressor, target):
     aggressor.point_gun_at(target.name)
+    print('{0} points his gun at {1}'.format(aggressor.name, target.name))
 
-def threaten_effect(aggressor, target):
-    return Effect(lambda: threaten(aggressor, target),
-                  lambda: "{1} is threatened by {0}".format(aggressor.name, target.name))
 
 def kill_event(aggressor, target, cowboys):
-    return Event(preconditions=[alive_precondition(aggressor),
-                                alive_precondition(target),
-                                threatening_precondition(aggressor, target),
-                                threatened_precondition(aggressor, cowboys - {aggressor, target}).negation()],
-                 effects=[kill_effect(aggressor, target, cowboys - {target})],
-                 description=lambda: "{0} shoots {1}".format(aggressor.name, target.name))
+    return Event(preconditions=[lambda: not aggressor.dead,
+                                lambda: not target.dead,
+                                lambda: aggressor.pointing_gun_at[target.name],
+                                lambda: not any(cowboy.pointing_gun_at[target.name] for cowboy in cowboys - {aggressor, target})],
+                 effects=[lambda: print('{0} shoots {1}'.format(aggressor.name, target.name)),
+                          lambda: kill(target, cowboys - {target})])
 
 
 def threaten_event(aggressor, target, cowboys):
-    return Event(preconditions=[alive_precondition(aggressor),
-                                alive_precondition(target),
-                                threatening_precondition(aggressor, target).negation(),
-                                threatening_anyone_precondition(aggressor, cowboys - {aggressor}).negation()],
-                 effects=[threaten_effect(aggressor, target)],
-                 description=lambda: "{0} threatens {1}".format(aggressor.name, target.name))
+    return Event(preconditions=[lambda: not aggressor.dead,
+                                lambda: not target.dead,
+                                lambda: not aggressor.pointing_gun_at[target.name],
+                                lambda: not any(aggressor.pointing_gun_at[cowboy.name] for cowboy in cowboys - {aggressor})],
+                 effects=[lambda: threaten(aggressor, target)])
+
 
 class Cowboy:
     def __init__(self, name):
@@ -68,6 +45,3 @@ class Cowboy:
         for cowboy in self.pointing_gun_at:
             self.pointing_gun_at[cowboy] = False
         self.pointing_gun_at[target] = True
-
-
-

@@ -1,21 +1,22 @@
-from interactiveenv import InteractiveEnv
+from tbenv import TurnBasedEnv
 from standoff import *
 import itertools
 
+
 def player_kill_event(aggressor, target, cowboys):
-    return Event(preconditions=[alive_precondition(aggressor),
-                                alive_precondition(target),
-                                threatening_precondition(aggressor, target)],
-                 effects=[kill_effect(aggressor, target, cowboys - {target})],
-                 description=lambda: "{0} kills {1}".format(aggressor.name, target.name))
+    return Event(preconditions=[lambda: not aggressor.dead,
+                                lambda: not target.dead,
+                                lambda: aggressor.pointing_gun_at[target.name]],
+                 effects=[lambda: print('{0} shoots {1}'.format(aggressor.name, target.name)),
+                          lambda: kill(target, cowboys - {target})])
 
 
 def player_threaten_event(aggressor, target):
-    return Event(preconditions=[alive_precondition(aggressor),
-                                alive_precondition(target),
-                                threatening_precondition(aggressor, target).negation()],
-                 effects=[threaten_effect(aggressor, target)],
-                 description=lambda: "{0} threatens {1}".format(aggressor.name, target.name))
+    return Event(preconditions=[lambda: not aggressor.dead,
+                                lambda: not target.dead,
+                                lambda: not aggressor.pointing_gun_at[target.name]],
+                 effects=[lambda: threaten(aggressor, target)])
+
 
 player = Cowboy("player")
 phil = Cowboy("phil")
@@ -45,9 +46,11 @@ for cowboy in cowboys - {player}:
     env_events.append(threaten_event(cowboy, player, cowboys))
     player_threaten_events[cowboy.name] = player_threaten_event(player, cowboy)
 
+
 def get_input():
     user_input = input('\n>')
     return user_input.split()
+
 
 def player_turn():
     if player.dead:
@@ -86,6 +89,6 @@ def player_turn():
             return player_turn()
 
 
-standoff = InteractiveEnv(env_events, player_turn)
+standoff = TurnBasedEnv(env_events, player_turn)
 print("You confront randy and phil.")
 standoff.run()
