@@ -13,14 +13,12 @@ def stop_util(item):
 
 def start(item):
     return Event(preconditions=[lambda: not item.on],
-                 effects=[lambda: start_util(item)],
-                 description=lambda: 'start {0}'.format(item.name))
+                 effects=[lambda: start_util(item)])
 
 
 def stop(item):
     return Event(preconditions=[lambda: item.on],
-                 effects=[lambda: stop_util(item)],
-                 description=lambda: 'stop {0}'.format(item.name))
+                 effects=[lambda: stop_util(item)])
 
 
 game = Game()

@@ -8,18 +8,18 @@ class Game:
         self.items = {}
         self.actions = {}
         self.actions['look'] = Event(preconditions=[],
-                                     effects=[lambda: self.look_util()],
-                                     description=lambda: "look around")
+                                     effects=[lambda: self.look_util()])
         self.actions['put'] = {}
         self.actions['get'] = {}
         self.actions['drop'] = {}
         self.containers = {'inventory': Container('inventory'),
                            'floor': Container('floor', 'on')}
+        self.inventory = self.containers['inventory']
         self.env = TurnBasedEnv(events=events,
                                 player_turn=self.turn)
 
-    def item_in_container(self, item, container):
-        return Precondition(definition=lambda: item.location == container.name)
+    def item_in(self, item, container):
+        return item.location == container.name
 
     def put_util(self, item, dest):
         try:
@@ -36,21 +36,21 @@ class Game:
                                         ', '.join(container.contains)))
 
     def put(self, item, container):
-        return Event(preconditions=[self.item_in_container(item, container).negation(),
-                                    self.item_in_container(item, self.containers['inventory'])],
-                     effects=[lambda: self.put_util(item, container)],
-                     description=lambda: "put {0} in {1}".format(item.name, container.name))
+        return Event(preconditions=[lambda: not self.item_in(item, container),
+                                    lambda: self.item_in(item, self.inventory)],
+                     effects=[lambda: print('you put the {0} {1} the {2}'.format(item.name,
+                                                                                 container.preposition,
+                                                                                 container.name)),
+                              lambda: self.put_util(item, container)])
 
     def get(self, item):
-        return Event(preconditions=[self.item_in_container(item, self.containers['inventory']).negation()],
-                     effects=[lambda: self.put_util(item, self.containers['inventory'])],
-                     description=lambda: "get {0}".format(item.name))
+        return Event(preconditions=[lambda: not self.item_in(item, self.inventory)],
+                     effects=[lambda: print('you take the {0}'.format(item.name)),
+                              lambda: self.put_util(item, self.inventory)])
 
     def drop(self, item):
-        return Event(preconditions=[self.item_in_container(item, self.containers['inventory'])],
-                     effects=[lambda: self.put_util(item, self.containers['floor'])],
-                     description=lambda: "drop {0}".format(item.name))
-
+        return Event(preconditions=[lambda: self.item_in(item, self.inventory)],
+                     effects=[lambda: self.put_util(item, self.containers['floor'])])
 
     def generate_actions(self):
         for item_name, item in self.items.items():
