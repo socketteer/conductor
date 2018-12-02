@@ -36,7 +36,7 @@ def cook(item):
 
 
 def irradiate():
-    print('deadly radiation escapes the microwave, filling the kitchen. your head exposed, and you die.')
+    print('deadly radiation escapes the microwave. your head explodes, and you die.')
     quit()
 
 
