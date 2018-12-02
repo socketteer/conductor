@@ -15,7 +15,11 @@ class Game:
         self.containers = {'inventory': Container('inventory'),
                            'floor': Container('floor', 'on')}
         self.inventory = self.containers['inventory']
-        self.env = TurnBasedEnv(events=events,
+        self.events = events
+        self.env = 'uninitialized'
+
+    def init_env(self):
+        self.env = TurnBasedEnv(events=self.events,
                                 player_turn=self.turn)
 
     def item_in(self, item, container):
@@ -23,17 +27,17 @@ class Game:
 
     def put_util(self, item, dest):
         try:
-            self.containers[item.location].contains.remove(item.name)
+            self.containers[item.location].contains.remove(item)
         except KeyError:
             pass
-        dest.contains.add(item.name)
+        dest.contains.add(item)
         item.location = dest.name
 
     def look_util(self):
         for container_name, container in self.containers.items():
             print('{0} {1}: {2}'.format(container.preposition,
                                         container_name,
-                                        ', '.join(container.contains)))
+                                        ', '.join([contents.name for contents in container.contains])))
 
     def put(self, item, container):
         return Event(preconditions=[lambda: not self.item_in(item, container),
@@ -71,6 +75,8 @@ class Game:
                     target2 = command[2]
             if action == 'exit' or action == 'quit':
                 quit()
+            elif action == 'pass':
+                return True
             elif len(command) == 1:
                 execute = self.actions[action]
             elif len(command) == 2:
@@ -90,4 +96,6 @@ class Game:
             return self.turn()
 
     def run(self):
+        if self.env == 'uninitialized':
+            self.init_env()
         self.env.run()

@@ -20,15 +20,16 @@ def stop(item):
     return Event(preconditions=[lambda: item.on],
                  effects=[lambda: stop_util(item)])
 
+
 def cook(item):
-    if(item.temperature == 'cold'):
+    if item.temperature == 'cold':
         item.temperature = 'hot'
-    elif(item.temperature == 'hot'):
+    elif item.temperature == 'hot':
         item.temperature = 'super hot'
-    elif(item.temperature == 'super hot'):
+    elif item.temperature == 'super hot':
         explode()
         return
-    if(item.explosive):
+    if item.explosive:
         explode()
 
 
@@ -36,12 +37,19 @@ def explode():
     print('the microwave explodes and you die')
     quit()
 
-cook_contents = Event(preconditions = [],
-                      effects = [])
 
-events = [cook_contents]
+def cook_contents_util(item):
+    for contents in item.contains:
+        cook(contents)
 
-game = Game(events)
+
+def cook_contents(item):
+    return Event(preconditions=[lambda: item.on,
+                                lambda: not len(item.contains) == 0],
+                 effects=[lambda: cook_contents_util(item)])
+
+
+game = Game()
 game.items['egg'] = Item('egg')
 game.items['soup'] = Item('soup')
 game.containers['table'] = Container('table', 'on')
@@ -58,6 +66,8 @@ game.actions['start'] = {}
 game.actions['stop'] = {}
 game.actions['start']['microwave'] = start(game.containers['microwave'])
 game.actions['stop']['microwave'] = stop(game.containers['microwave'])
+
+game.events.append(cook_contents(game.containers['microwave']))
 
 game.generate_actions()
 game.run()
