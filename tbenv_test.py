@@ -76,7 +76,6 @@ def player_turn():
             for c in alive:
                 print('{0} is still alive'.format(c.name))
             for f, s in itertools.permutations(alive, 2):
-                print(f.name, s.name)
                 if f.pointing_gun_at[s.name]:
                     print('{0} is threatening {1}'.format(f.name, s.name))
             return player_turn()

@@ -27,6 +27,7 @@ class Event:
         '''
 
         if all(predicate.definition() is True for predicate in self.preconditions):
+            print(self.description())
             self.execute()
             return True
         else:
@@ -34,11 +35,10 @@ class Event:
 
     def execute(self):
         for effect in self.effects:
-            print(effect.description())
-            effect.definition()
+            effect()
 
 class Precondition:
-    def __init__(self, definition, true_description, false_description):
+    def __init__(self, definition, true_description="", false_description=""):
         self.definition = definition
         self.true_description = true_description
         self.false_description = false_description

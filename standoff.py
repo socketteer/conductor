@@ -34,7 +34,7 @@ def threaten(aggressor, target):
 
 def threaten_effect(aggressor, target):
     return Effect(lambda: threaten(aggressor, target),
-                  lambda: "{0} threatens {1}".format(aggressor.name, target.name))
+                  lambda: "{1} is threatened by {0}".format(aggressor.name, target.name))
 
 def kill_event(aggressor, target, cowboys):
     return Event(preconditions=[alive_precondition(aggressor),
@@ -42,7 +42,7 @@ def kill_event(aggressor, target, cowboys):
                                 threatening_precondition(aggressor, target),
                                 threatened_precondition(aggressor, cowboys - {aggressor, target}).negation()],
                  effects=[kill_effect(aggressor, target, cowboys - {target})],
-                 description=lambda: "{0} kills {1}".format(aggressor.name, target.name))
+                 description=lambda: "{0} shoots {1}".format(aggressor.name, target.name))
 
 
 def threaten_event(aggressor, target, cowboys):

@@ -8,22 +8,23 @@ randy = Cowboy("randy")
 
 #initial conditions
 #phil wins
+'''
 bob.pointing_gun_at["randy"] = True
 bob.pointing_gun_at["phil"] = False
 phil.pointing_gun_at["bob"] = True
 phil.pointing_gun_at["randy"] = False
 randy.pointing_gun_at["bob"] = True
 randy.pointing_gun_at["phil"] = False
-
-#stable init
 '''
+#stable init
+
 bob.pointing_gun_at["randy"] = True
 bob.pointing_gun_at["phil"] = False
 phil.pointing_gun_at["bob"] = True
 phil.pointing_gun_at["randy"] = False
 randy.pointing_gun_at["bob"] = False
 randy.pointing_gun_at["phil"] = True
-'''
+
 
 cowboys = {bob, phil, randy}
 
