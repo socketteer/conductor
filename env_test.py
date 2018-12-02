@@ -20,8 +20,28 @@ def stop(item):
     return Event(preconditions=[lambda: item.on],
                  effects=[lambda: stop_util(item)])
 
+def cook(item):
+    if(item.temperature == 'cold'):
+        item.temperature = 'hot'
+    elif(item.temperature == 'hot'):
+        item.temperature = 'super hot'
+    elif(item.temperature == 'super hot'):
+        explode()
+        return
+    if(item.explosive):
+        explode()
 
-game = Game()
+
+def explode():
+    print('the microwave explodes and you die')
+    quit()
+
+cook_contents = Event(preconditions = [],
+                      effects = [])
+
+events = [cook_contents]
+
+game = Game(events)
 game.items['egg'] = Item('egg')
 game.items['soup'] = Item('soup')
 game.containers['table'] = Container('table', 'on')

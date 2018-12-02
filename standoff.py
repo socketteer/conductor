@@ -1,6 +1,5 @@
 from event import *
 
-
 def kill(target, others):
     for cowboy in others:
         cowboy.pointing_gun_at[target.name] = False

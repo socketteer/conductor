@@ -1,6 +1,7 @@
 def clause(predicates):
     return lambda: any(predicate() is True for predicate in predicates)
 
+
 class Event:
     def __init__(self, preconditions, effects):
         """
