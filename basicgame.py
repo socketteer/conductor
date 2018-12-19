@@ -50,7 +50,7 @@ class Game:
             if hasattr(item, 'location'):
                 self.containers[item.location.name].contains.remove(item)
         except KeyError:
-            print('{0}:put_util item location not in containers'.format(type(self)))
+            print('{0}.put_util ERROR: item location not in containers'.format(type(self)))
             return
         dest.contains.add(item)
         item.location = dest
@@ -119,13 +119,13 @@ class Game:
         except KeyError:
             print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
             return
+        self.lexicon.nouns[name] = name
         self.add_item_aliases(name, aliases)
 
-    def import_item(self, item, aliases=[], container=False):
+    def import_item(self, item, container=False):
         pass
 
     def add_item_aliases(self, name, aliases):
-        self.lexicon.nouns[name] = name
         for alias in aliases:
             self.lexicon.nouns[alias] = name
 
@@ -171,7 +171,8 @@ class Game:
             elif command_type == 3:
                 execute = self.two_operand_actions[parsed_command[0]][parsed_command[1]][parsed_command[2]]
             else:
-                print('{0}:turn ERROR: invalid command type {1}'.format(type(self), command_type))
+                print('{0}.turn ERROR: invalid command type {1}'.format(type(self), command_type))
+                return self.turn()
             if not execute.query():
                 print('that is impossible')
                 return self.turn()
