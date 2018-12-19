@@ -1,0 +1,12 @@
+x lexicon
+x auto aliasing
+alias ambiguity resolution
+x game: universal actions
+x game: merge items and containers
+game: import existing items
+standard item libraries
+reduce import requirements for developer
+parsing multiple words
+game access time
+action duration
+
