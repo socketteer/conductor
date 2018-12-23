@@ -62,7 +62,7 @@ class Game:
         container.open = False
 
     def accessible(self, container):
-        return not self.has_door(container) or container.open
+        return (not hasattr(container, 'open')) or container.open
 
     def look_util(self):
         for container_name, container in self.containers.items():
@@ -109,21 +109,23 @@ class Game:
 
     def create_item(self, name, location=None, aliases=[], container=False, preposition='in'):
         if container:
-            self.items[name] = Container(name, preposition)
-            self.containers[name] = self.items[name]
+            item = Container(name, preposition)
         else:
-            self.items[name] = Item(name)
+            item = Item(name)
+        self.import_item(item, location, aliases, container)
+
+    def import_item(self, item, location=None, aliases=[], container=False):
+        self.items[item.name] = item
+        if container:
+            self.containers[item.name] = item
         try:
             if location:
-                self.put_util(self.items[name], self.containers[location])
+                self.put_util(item, self.containers[location])
         except KeyError:
             print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
             return
-        self.lexicon.nouns[name] = name
-        self.add_item_aliases(name, aliases)
-
-    def import_item(self, item, container=False):
-        pass
+        self.lexicon.nouns[item.name] = item.name
+        self.add_item_aliases(item.name, aliases)
 
     def add_item_aliases(self, name, aliases):
         for alias in aliases:
@@ -151,7 +153,6 @@ class Game:
             for action_name, action in self.one_operand_actions.items():
                 action[item_name] = self.action_generators[action_name](item)
 
-    #standardized 0/1/2 target?
     def turn(self):
         try:
             command = input('\n>')
@@ -159,8 +160,11 @@ class Game:
                 command_type, parsed_command = parse_user_input(command, self.lexicon)
             except ParseError:
                 return self.turn()
+            '''except KeyError:
+                print('{0}.turn ERROR: name resolution failure'.format(type(self)))
+                return self.turn()'''
             if command_type == 1:
-                if parsed_command[0] == 'exit' or parsed_command[0] == 'quit':
+                if parsed_command[0] == 'exit':
                     quit()
                 elif parsed_command[0] == 'pass':
                     return True

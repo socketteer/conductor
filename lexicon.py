@@ -4,15 +4,12 @@ class Lexicon:
         self.verbs = {}
 
     def resolve(self, word, pos='noun'):
-        try:
-            if pos == 'noun':
-                return self.nouns[word]
-            elif pos == 'verb':
-                return self.verbs[word]
-            else:
-                print('Lexicon:resolve ERROR: invalid part of speech parameter {0}'.format(pos))
-        except KeyError:
-            return word
+        if pos == 'noun':
+            return self.nouns[word]
+        elif pos == 'verb':
+            return self.verbs[word]
+        else:
+            print('Lexicon:resolve ERROR: invalid part of speech parameter {0}'.format(pos))
 
     def read_word_map(self, filename, pos='noun'):
         with open(filename, 'r') as wordmap:
