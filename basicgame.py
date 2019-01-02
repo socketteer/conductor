@@ -4,7 +4,11 @@ from item import Item, Container
 from tbenv import TurnBasedEnv
 from lexicon import Lexicon
 
+
 class InvalidOperation(Exception):
+    pass
+
+class NoGenerator(Exception):
     pass
 
 class Game:
@@ -23,6 +27,7 @@ class Game:
         self.add_universal_action('drop', self.drop, 1)
         self.add_universal_action('open', self.open, 1)
         self.add_universal_action('close', self.close, 1)
+        self.add_universal_action('look', self.inspect, 1)
 
         self.create_item('inventory', container=True)
         self.create_item('floor', aliases=['ground'], container=True, preposition='on')
@@ -70,6 +75,16 @@ class Game:
                 print('{0} {1}: {2}'.format(container.preposition,
                                             container_name,
                                             ', '.join([contents.name for contents in container.contains])))
+
+    def description_util(self, item):
+        if hasattr(item, 'description'):
+            return item.description()
+        else:
+            return 'It is a {0}'.format(item.name)
+
+    def inspect(self, item):
+        return Event(preconditions=[],
+                     effects=[lambda: print(self.description_util(item))])
 
     def put(self, item, container):
         return Event(preconditions=[lambda: item.portable,
@@ -153,6 +168,38 @@ class Game:
             for action_name, action in self.one_operand_actions.items():
                 action[item_name] = self.action_generators[action_name](item)
 
+    def generate_actions_template(self):
+        for item_name, item in self.items.items():
+            for action_name, action in self.two_operand_actions.items():
+                action[item_name] = {}
+
+    def exe(self, action, target1=None, target2=None, action_type=1):
+        try:
+            if action_type == 0:
+                print('do not use this method to execute zero operand actions; execute directly instead')
+                return False
+            elif action_type == 1:
+                return self.one_operand_actions[action][target1].query()
+            elif action_type == 2:
+                return self.two_operand_actions[action][target1][target2].query()
+        except KeyError:
+            if not self.generate_action(action, target1, target2, action_type):
+                raise NoGenerator
+            else:
+                return self.exe(action, target1, target2, action_type)
+
+    def generate_action(self, action, target1, target2, action_type=1):
+        #print('attempting to generate action: {0} {1} {2}'.format(action, target1, target2))
+        if action in self.action_generators:
+            if action_type == 1:
+                self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
+            else:
+                self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
+                                                                                                    self.items[target2])
+            return True
+        else:
+            return False
+
     def turn(self):
         try:
             command = input('\n>')
@@ -161,7 +208,7 @@ class Game:
             except ParseError:
                 return self.turn()
             '''except KeyError:
-                print('{0}.turn ERROR: name resolution failure'.format(type(self)))
+                print('{0}.turn ERROR: entity resolution failure'.format(type(self)))
                 return self.turn()'''
             if command_type == 1:
                 if parsed_command[0] == 'exit':
@@ -169,21 +216,24 @@ class Game:
                 elif parsed_command[0] == 'pass':
                     return True
                 else:
-                    execute = self.zero_operand_actions[parsed_command[0]]
+                    result = self.zero_operand_actions[parsed_command[0]].query()
             elif command_type == 2:
-                execute = self.one_operand_actions[parsed_command[0]][parsed_command[1]]
+                result = self.exe(parsed_command[0], parsed_command[1], action_type=1)
             elif command_type == 3:
-                execute = self.two_operand_actions[parsed_command[0]][parsed_command[1]][parsed_command[2]]
+                result = self.exe(parsed_command[0], parsed_command[1], parsed_command[2], action_type=2)
             else:
                 print('{0}.turn ERROR: invalid command type {1}'.format(type(self), command_type))
                 return self.turn()
-            if not execute.query():
+            if not result:
                 print('that is impossible')
                 return self.turn()
             else:
                 return True
         except KeyError:
             print('action or target invalid')
+            return self.turn()
+        except NoGenerator:
+            print('no generator found for action')
             return self.turn()
         except TypeError:
             print('error: probably tried to apply action to invalid target')

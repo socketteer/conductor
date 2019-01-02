@@ -1,15 +1,18 @@
 x lexicon
 x auto aliasing
-alias ambiguity resolution
-parsing multiple word names
+alias ambiguity
+parsing multiple word entity resolution
 
 x game: universal actions
 x game: merge items and containers
 x game: import existing items
 game: rooms
+x game: lazily evaluate actions
 game: detailed error msgs for failed actions
 standard item libraries
 reduce import requirements for developer
 game access time
 action duration
+
+dialogue
 

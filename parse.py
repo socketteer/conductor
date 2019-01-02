@@ -1,15 +1,17 @@
 import re
 
+
 class ParseError(Exception):
     pass
 
+
 # Makes command lowercase, removes punctuation, determiners, and other common extraneous input
 def sanitize(user_input):
-    '''
+    """
     # Makes command lowercase, removes punctuation, determiners, and other common extraneous input
     :param user_input:
-    :return:
-    '''
+    :return: result_words:
+    """
     clean = user_input.lower()
 
     alpha = re.compile('[^a-zA-Z1-9_\s]')
