@@ -9,8 +9,12 @@ x game: import existing items
 game: rooms
 x game: lazily evaluate actions
 game: detailed error msgs for failed actions
+game: autodescriptions
+    x implement
+    test
+    templates
+chained event error reporting
 standard item libraries
-reduce import requirements for developer
 game access time
 action duration
 

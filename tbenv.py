@@ -7,9 +7,15 @@ class TurnBasedEnv(Env):
 
     def step(self):
         state_change = 0
-        if self.player_turn():
-            state_change = 1
         for event in self.events:
-            if event.query():
+            success, event, predicate = event.query()
+            if success:
+                for effect in event.effects:
+                    print(effect[1])
                 state_change = 1
         return state_change
+
+    def run(self):
+        while True:
+            self.step()
+            self.player_turn()

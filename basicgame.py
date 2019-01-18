@@ -3,13 +3,8 @@ from parse import parse_user_input, ParseError
 from item import Item, Container
 from tbenv import TurnBasedEnv
 from lexicon import Lexicon
+from gameutil import *
 
-
-class InvalidOperation(Exception):
-    pass
-
-class NoGenerator(Exception):
-    pass
 
 class Game:
     def __init__(self, events=[]):
@@ -21,7 +16,7 @@ class Game:
         self.one_operand_actions = {}
         self.two_operand_actions = {}
         self.zero_operand_actions['look'] = Event(preconditions=[],
-                                                  effects=[lambda: self.look_util()])
+                                                  effects=[[lambda: look_util(self.containers), '']])
         self.add_universal_action('put', self.put, 2)
         self.add_universal_action('get', self.get, 1)
         self.add_universal_action('drop', self.drop, 1)
@@ -45,82 +40,39 @@ class Game:
         if noun_file:
             self.lexicon.read_word_map(noun_file, 'noun')
 
-    def item_in(self, item, container):
-        return item.location == container
-
-    def put_util(self, item, dest):
-        try:
-            if not hasattr(dest, 'contains'):
-                raise InvalidOperation
-            if hasattr(item, 'location'):
-                self.containers[item.location.name].contains.remove(item)
-        except KeyError:
-            print('{0}.put_util ERROR: item location not in containers'.format(type(self)))
-            return
-        dest.contains.add(item)
-        item.location = dest
-
-    def open_util(self, container):
-        container.open = True
-
-    def close_util(self, container):
-        container.open = False
-
-    def accessible(self, container):
-        return (not hasattr(container, 'open')) or container.open
-
-    def look_util(self):
-        for container_name, container in self.containers.items():
-            if container.contains:
-                print('{0} {1}: {2}'.format(container.preposition,
-                                            container_name,
-                                            ', '.join([contents.name for contents in container.contains])))
-
-    def description_util(self, item):
-        if hasattr(item, 'description'):
-            return item.description()
-        else:
-            return 'It is a {0}'.format(item.name)
-
     def inspect(self, item):
         return Event(preconditions=[],
-                     effects=[lambda: print(self.description_util(item))])
+                     effects=[inspect_effect(item)])
 
     def put(self, item, container):
-        return Event(preconditions=[lambda: item.portable,
-                                    lambda: not self.item_in(item, container),
-                                    lambda: hasattr(container, 'contains'),
-                                    lambda: self.item_in(item, self.inventory),
-                                    lambda: self.accessible(container)],
-                     effects=[lambda: print('you put the {0} {1} the {2}'.format(item.name,
-                                                                                 container.preposition,
-                                                                                 container.name)),
-                              lambda: self.put_util(item, container)])
+        return Event(preconditions=[portable_precondition(item),
+                                    location_accessible_precondition(item.location),
+                                    item_not_in_precondition(item, container),
+                                    container_precondition(container),
+                                    location_accessible_precondition(container)],
+                     effects=[get_effect(item, self.inventory),
+                              put_effect(item, container)])
 
     def get(self, item):
-        return Event(preconditions=[lambda: item.portable,
-                                    lambda: not self.item_in(item, self.inventory),
-                                    lambda: self.accessible(item.location)],
-                     effects=[lambda: print('you take the {0}'.format(item.name)),
-                              lambda: self.put_util(item, self.inventory)])
+        return Event(preconditions=[portable_precondition(item),
+                                    item_not_in_precondition(item, self.inventory),
+                                    location_accessible_precondition(item.location)],
+                     effects=[get_effect(item, self.inventory)])
 
     def drop(self, item):
-        return Event(preconditions=[lambda: item.portable,
-                                    lambda: self.item_in(item, self.inventory)],
-                     effects=[lambda: print('you drop the {0}'.format(item.name)),
-                              lambda: self.put_util(item, self.containers['floor'])])
+        return Event(preconditions=[portable_precondition(item),
+                                    item_in_precondition(item, self.inventory)],
+                     effects=[drop_effect(item, self.containers['floor'])])
 
     def open(self, container):
-        return Event(preconditions=[lambda: hasattr(container, 'open'),
-                                    lambda: not container.open],
-                     effects=[lambda: print('you open the {0}'.format(container.name)),
-                              lambda: self.open_util(container)])
+        return Event(preconditions=[openable_precondition(container),
+                                    closed_precondition(container)],
+                     effects=[open_effect(container)])
 
     def close(self, container):
-        return Event(preconditions=[lambda: hasattr(container, 'open'),
-                                    lambda: container.open],
-                     effects=[lambda: print('you close the {0}'.format(container.name)),
-                              lambda: self.close_util(container)])
+        return Event(preconditions=[openable_precondition(container),
+                                    open_precondition(container)],
+                     effects=[close_effect(container)])
 
     def create_item(self, name, location=None, aliases=[], container=False, preposition='in'):
         if container:
@@ -135,7 +87,7 @@ class Game:
             self.containers[item.name] = item
         try:
             if location:
-                self.put_util(item, self.containers[location])
+                put_util(item, self.containers[location])
         except KeyError:
             print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
             return
@@ -173,23 +125,33 @@ class Game:
             for action_name, action in self.two_operand_actions.items():
                 action[item_name] = {}
 
-    def exe(self, action, target1=None, target2=None, action_type=1):
+    def process_command(self, action, target1=None, target2=None, action_type=1):
         try:
             if action_type == 0:
                 print('do not use this method to execute zero operand actions; execute directly instead')
                 return False
             elif action_type == 1:
-                return self.one_operand_actions[action][target1].query()
+                action_event = self.one_operand_actions[action][target1]
             elif action_type == 2:
-                return self.two_operand_actions[action][target1][target2].query()
+                action_event = self.two_operand_actions[action][target1][target2]
+            self.exe(action_event)
         except KeyError:
             if not self.generate_action(action, target1, target2, action_type):
                 raise NoGenerator
             else:
-                return self.exe(action, target1, target2, action_type)
+                return self.process_command(action, target1, target2, action_type)
+
+    def exe(self, action, silent=False):
+        success, event, predicate = action.query()
+        if not silent:
+            if not success:
+                print(predicate[1])
+            else:
+                for effect in event.effects:
+                    print(effect[1])
+        return success
 
     def generate_action(self, action, target1, target2, action_type=1):
-        #print('attempting to generate action: {0} {1} {2}'.format(action, target1, target2))
         if action in self.action_generators:
             if action_type == 1:
                 self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
@@ -207,37 +169,33 @@ class Game:
                 command_type, parsed_command = parse_user_input(command, self.lexicon)
             except ParseError:
                 return self.turn()
-            '''except KeyError:
-                print('{0}.turn ERROR: entity resolution failure'.format(type(self)))
-                return self.turn()'''
             if command_type == 1:
                 if parsed_command[0] == 'exit':
                     quit()
                 elif parsed_command[0] == 'pass':
                     return True
                 else:
-                    result = self.zero_operand_actions[parsed_command[0]].query()
+                    result = self.exe(self.zero_operand_actions[parsed_command[0]])
             elif command_type == 2:
-                result = self.exe(parsed_command[0], parsed_command[1], action_type=1)
+                result = self.process_command(parsed_command[0], parsed_command[1], action_type=1)
             elif command_type == 3:
-                result = self.exe(parsed_command[0], parsed_command[1], parsed_command[2], action_type=2)
+                result = self.process_command(parsed_command[0], parsed_command[1], parsed_command[2], action_type=2)
             else:
                 print('{0}.turn ERROR: invalid command type {1}'.format(type(self), command_type))
-                return self.turn()
+                return False
             if not result:
-                print('that is impossible')
-                return self.turn()
+                return False
             else:
                 return True
         except KeyError:
             print('action or target invalid')
-            return self.turn()
+            return False
         except NoGenerator:
             print('no generator found for action')
-            return self.turn()
-        except TypeError:
-            print('error: probably tried to apply action to invalid target')
-            return self.turn()
+            return False
+        except TypeError as e:
+            print(repr(e))
+            return False
 
     def run(self):
         if self.env == 'uninitialized':

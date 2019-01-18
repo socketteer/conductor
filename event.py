@@ -2,6 +2,10 @@ def clause(predicates):
     return lambda: any(predicate() is True for predicate in predicates)
 
 
+class FailedPrecondition(Exception):
+    pass
+
+
 class Event:
     def __init__(self, preconditions, effects):
         """
@@ -13,14 +17,32 @@ class Event:
         #self.description = description
 
     def query(self):
-        #print('querying event "{0}"'.format(self.description()))
+        """
 
-        if all(predicate() is True for predicate in self.preconditions):
-            self.execute()
-            return True
-        else:
-            return False
+        :return: returns whether event is executed; if not, second return value is predicate which failed
+        """
+        for predicate in self.preconditions:
+            if not predicate[0]():
+                return False, self, predicate
+        self.execute()
+        return True, self, None
 
     def execute(self):
         for effect in self.effects:
-            effect()
+            effect[0]()
+
+    def report_failure(self, predicate):
+        try:
+            print(predicate[1])
+        except TypeError:
+            print("Event:report_failure ERROR: predicate has no description")
+
+    def report_success(self):
+        for effect in self.effects:
+            try:
+                print(effect[1])
+            except TypeError:
+                pass
+
+
+

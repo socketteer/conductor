@@ -1,7 +1,7 @@
 from basicgame import Game
 from standoff import *
 from event import *
-
+from gameutil import *
 
 def start_util(item):
     item.on = True
@@ -12,17 +12,15 @@ def stop_util(item):
 
 
 def start(item):
-    return Event(preconditions=[lambda: hasattr(item, 'on'),
-                                lambda: not item.on],
-                 effects=[lambda: print('you turn the {0} on'.format(item.name)),
-                          lambda: start_util(item)])
+    return Event(preconditions=[[lambda: hasattr(item, 'on'), 'you cannot start the {0}'.format(item.name)],
+                                [lambda: not item.on, '{0} is already on'.format(item.name)]],
+                 effects=[[lambda: start_util(item), 'you turn on the {0}'.format(item.name)]])
 
 
 def stop(item):
-    return Event(preconditions=[lambda: hasattr(item, 'on'),
-                                lambda: item.on],
-                 effects=[lambda: print('you turn the {0} off'.format(item.name)),
-                          lambda: stop_util(item)])
+    return Event(preconditions=[[lambda: hasattr(item, 'on'), 'you cannot stop the {0}'.format(item.name)],
+                                [lambda: item.on, '{0} is already off'.format(item.name)]],
+                 effects=[[lambda: stop_util(item), 'you turn off the {0}'.format(item.name)]])
 
 
 def cook(item):
@@ -53,15 +51,15 @@ def cook_contents_util(item):
 
 
 def cook_contents(item):
-    return Event(preconditions=[lambda: item.on,
-                                lambda: not len(item.contains) == 0],
-                 effects=[lambda: cook_contents_util(item)])
+    return Event(preconditions=[[lambda: item.on, 'oven is not on'],
+                                [lambda: not len(item.contains) == 0, 'there is nothing in the microwave']],
+                 effects=[[lambda: cook_contents_util(item)], '{0} is cooked'.format(item.name)])
 
 
 def left_open(item):
-    return Event(preconditions=[lambda: item.on,
-                                lambda: item.open],
-                 effects=[lambda:irradiate()])
+    return Event(preconditions=[[lambda: item.on, 'oven is not on'],
+                                [lambda: item.open, 'oven is not open']],
+                 effects=[[lambda:irradiate(), 'the room is irradiated']])
 
 
 game = Game()
