@@ -52,11 +52,15 @@ def inspect_util(item):
 
 
 def look_util(containers):
-    for container_name, container in containers.items():
-        if container.contains:
-            print('{0} {1}: {2}'.format(container.preposition,
-                                        container_name,
-                                        ', '.join([contents.name for contents in container.contains])))
+    for container in containers:
+        if hasattr(container, 'description'):
+            print(container.description())
+        else:
+            print('You see the {0}'.format(container.name))
+        if hasattr(container, 'contains') and container.contains:
+            if accessible(container):
+                look_util(container.contains)
+
 
 
 """
@@ -95,6 +99,9 @@ def item_in_precondition(item, container):
 def item_not_in_precondition(item, container):
     return [lambda: not item_in(item, container), 'the {0} is in the {1}'.format(item.name, container.name)]
 
+
+def item_in_room_precondition(item, room):
+    return [lambda: item in room.values(), 'there is no {0} at your location'.format(item.name)]
 
 """
 effect templates

@@ -53,7 +53,7 @@ def cook_contents_util(item):
 def cook_contents(item):
     return Event(preconditions=[[lambda: item.on, 'oven is not on'],
                                 [lambda: not len(item.contains) == 0, 'there is nothing in the microwave']],
-                 effects=[[lambda: cook_contents_util(item)], '{0} is cooked'.format(item.name)])
+                 effects=[[lambda: cook_contents_util(item), 'contents of {0} is cooking'.format(item.name)]])
 
 
 def left_open(item):
@@ -73,7 +73,7 @@ game.create_item('egg', 'table')
 game.create_item('soup', 'table', aliases=['stew', 'brew'])
 game.items['egg'].temperature = 'cold'
 game.items['egg'].explosive = True
-game.items['egg'].description = lambda: 'It looks like a normal egg.'
+game.items['egg'].description = lambda: 'You inspect the egg. It looks like a normal egg.'
 game.items['soup'].temperature = 'cold'
 game.items['soup'].explosive = False
 game.items['soup'].description = lambda: 'You inspect the bowl of {0} soup.'.format(game.items['soup'].temperature)

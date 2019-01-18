@@ -8,11 +8,11 @@ x game: merge items and containers
 x game: import existing items
 game: rooms
 x game: lazily evaluate actions
-game: detailed error msgs for failed actions
-game: autodescriptions
+x game: detailed error msgs for failed actions
+x game: autodescriptions
     x implement
-    test
-    templates
+    x test
+    x templates
 chained event error reporting
 standard item libraries
 game access time

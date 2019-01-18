@@ -9,6 +9,13 @@ from gameutil import *
 class Game:
     def __init__(self, events=[]):
         self.lexicon = Lexicon()
+        self.init_game_structure()
+        self.init_universal_actions()
+        self.init_game_items()
+        self.events = events
+        self.env = 'uninitialized'
+
+    def init_game_structure(self):
         self.items = {}
         self.containers = {}
         self.action_generators = {}
@@ -16,7 +23,9 @@ class Game:
         self.one_operand_actions = {}
         self.two_operand_actions = {}
         self.zero_operand_actions['look'] = Event(preconditions=[],
-                                                  effects=[[lambda: look_util(self.containers), '']])
+                                                  effects=[[lambda: look_util(self.containers.values()), '']])
+
+    def init_universal_actions(self):
         self.add_universal_action('put', self.put, 2)
         self.add_universal_action('get', self.get, 1)
         self.add_universal_action('drop', self.drop, 1)
@@ -24,11 +33,11 @@ class Game:
         self.add_universal_action('close', self.close, 1)
         self.add_universal_action('look', self.inspect, 1)
 
+    def init_game_items(self):
         self.create_item('inventory', container=True)
-        self.create_item('floor', aliases=['ground'], container=True, preposition='on')
         self.inventory = self.items['inventory']
-        self.events = events
-        self.env = 'uninitialized'
+        self.create_item('floor', aliases=['ground'], container=True, preposition='on')
+
 
     def init_env(self):
         self.env = TurnBasedEnv(events=self.events,
