@@ -20,8 +20,8 @@ class Item:
         self.attributes.remove(attribute)
 
 class Container(Item):
-    def __init__(self, name, preposition='in', portable=False):
-        Item.__init__(self, name)
+    def __init__(self, name, preposition='in', portable=False, attributes=[], aliases=[]):
+        Item.__init__(self, name, attributes, aliases)
         self.contains = set()
         self.preposition = preposition
         self.portable = portable
