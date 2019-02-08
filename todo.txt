@@ -12,6 +12,7 @@ x game: autodescriptions
     x implement
     x test
     x templates
+error handling overhaul
 chained event error reporting
 standard item libraries
 game access time
@@ -22,9 +23,9 @@ x object attribute word list
 parsing
     x lexicon
     x auto aliasing
-    alias ambiguity
+    x alias ambiguity
     parsing multiple word entity resolution
-    specification via modifier
+    x specification via modifier
     modular
 scenes
 

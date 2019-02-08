@@ -38,7 +38,7 @@ def resolve_phrase(word, attributes, items, lex):
         raise ResolutionFailure('unable to resolve noun {0}'.format(word))
     viable = filter_by_attributes(attributes, viable)
     if len(viable) == 0:
-        raise ResolutionFailure('no object called {0} with attributes [{1}]'.format(word, ' ,'.join(attributes)))
+        raise ResolutionFailure('no object called {0} with attributes [{1}]'.format(word, ', '.join(attributes)))
     elif len(viable) == 1:
         return viable[0]
     else:
