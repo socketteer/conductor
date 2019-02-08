@@ -1,12 +1,11 @@
-x lexicon
-x auto aliasing
-alias ambiguity
-parsing multiple word entity resolution
 
 x game: universal actions
 x game: merge items and containers
 x game: import existing items
-game: rooms
+x game: rooms
+    x portals
+    item accessibility
+    descriptions
 x game: lazily evaluate actions
 x game: detailed error msgs for failed actions
 x game: autodescriptions
@@ -17,6 +16,17 @@ chained event error reporting
 standard item libraries
 game access time
 action duration
+game state representation
+    saving/loading with dictionary
+x object attribute word list
+parsing
+    x lexicon
+    x auto aliasing
+    alias ambiguity
+    parsing multiple word entity resolution
+    specification via modifier
+    modular
+scenes
 
 dialogue
 

@@ -100,8 +100,6 @@ def item_not_in_precondition(item, container):
     return [lambda: not item_in(item, container), 'the {0} is in the {1}'.format(item.name, container.name)]
 
 
-def item_in_room_precondition(item, room):
-    return [lambda: item in room.values(), 'there is no {0} at your location'.format(item.name)]
 
 """
 effect templates

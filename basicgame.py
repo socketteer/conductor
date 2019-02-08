@@ -7,13 +7,26 @@ from gameutil import *
 
 
 class Game:
-    def __init__(self, events=[]):
+    def __init__(self, events=[], debug=False):
         self.lexicon = Lexicon()
         self.init_game_structure()
-        self.init_universal_actions()
+        self.init_actions()
         self.init_game_items()
         self.events = events
         self.env = 'uninitialized'
+        self.debug = debug
+
+    def print_debugging_info(self):
+        print(self.items)
+        #print(self.containers)
+        print(self.zero_operand_actions)
+        print(self.one_operand_actions)
+        print(self.two_operand_actions)
+        print(self.zero_operand_actions)
+        #self.lexicon.print_lexicon()
+
+    def step_debug(self):
+        print('current location: {0}'.format(self.current_location.name))
 
     def init_game_structure(self):
         self.items = {}
@@ -25,19 +38,18 @@ class Game:
         self.zero_operand_actions['look'] = Event(preconditions=[],
                                                   effects=[[lambda: look_util(self.containers.values()), '']])
 
-    def init_universal_actions(self):
-        self.add_universal_action('put', self.put, 2)
-        self.add_universal_action('get', self.get, 1)
-        self.add_universal_action('drop', self.drop, 1)
-        self.add_universal_action('open', self.open, 1)
-        self.add_universal_action('close', self.close, 1)
-        self.add_universal_action('look', self.inspect, 1)
+    def init_actions(self):
+        self.add_action('put', self.put, 2)
+        self.add_action('get', self.get, 1)
+        self.add_action('drop', self.drop, 1)
+        self.add_action('open', self.open, 1)
+        self.add_action('close', self.close, 1)
+        self.add_action('look', self.inspect, 1)
 
     def init_game_items(self):
         self.create_item('inventory', container=True)
         self.inventory = self.items['inventory']
         self.create_item('floor', aliases=['ground'], container=True, preposition='on')
-
 
     def init_env(self):
         self.env = TurnBasedEnv(events=self.events,
@@ -85,9 +97,9 @@ class Game:
 
     def create_item(self, name, location=None, aliases=[], container=False, preposition='in'):
         if container:
-            item = Container(name, preposition)
+            item = Container(name, preposition, aliases=aliases)
         else:
-            item = Item(name)
+            item = Item(name, aliases=aliases)
         self.import_item(item, location, aliases, container)
 
     def import_item(self, item, location=None, aliases=[], container=False):
@@ -101,13 +113,8 @@ class Game:
             print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
             return
         self.lexicon.nouns[item.name] = item.name
-        self.add_item_aliases(item.name, aliases)
 
-    def add_item_aliases(self, name, aliases):
-        for alias in aliases:
-            self.lexicon.nouns[alias] = name
-
-    def add_universal_action(self, action_name, action_generator, action_type):
+    def add_action(self, action_name, action_generator, action_type):
         if action_type == 0:
             print('do not use this method to create zero operand actions; create directly instead')
             return
@@ -116,7 +123,7 @@ class Game:
         elif action_type == 2:
             self.two_operand_actions[action_name] = {}
         else:
-            print('{0}.add_universal_action ERROR: invalid action_type {1}'.format(type(self), action_type))
+            print('{0}.add_action ERROR: invalid action_type {1}'.format(type(self), action_type))
             return
         self.action_generators[action_name] = action_generator
 
@@ -154,10 +161,9 @@ class Game:
         success, event, predicate = action.query()
         if not silent:
             if not success:
-                print(predicate[1])
+                event.report_failure(predicate)
             else:
-                for effect in event.effects:
-                    print(effect[1])
+                event.report_success()
         return success
 
     def generate_action(self, action, target1, target2, action_type=1):
@@ -173,6 +179,7 @@ class Game:
 
     def turn(self):
         try:
+            #self.step_debug()
             command = input('\n>')
             try:
                 command_type, parsed_command = parse_user_input(command, self.lexicon)
@@ -196,15 +203,16 @@ class Game:
                 return False
             else:
                 return True
-        except KeyError:
-            print('action or target invalid')
-            return False
         except NoGenerator:
             print('no generator found for action')
             return False
-        except TypeError as e:
+        '''except TypeError as e:
             print(repr(e))
             return False
+        except KeyError:
+            print('action or target invalid')
+            return False'''
+
 
     def run(self):
         if self.env == 'uninitialized':
