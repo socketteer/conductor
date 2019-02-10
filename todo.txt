@@ -24,10 +24,12 @@ parsing
     x lexicon
     x auto aliasing
     x alias ambiguity
+    pos identification
     parsing multiple word entity resolution
     x specification via modifier
     modular
-scenes
-
-dialogue
+narrative class
+    scenes
+active objects
+dialogue system
 

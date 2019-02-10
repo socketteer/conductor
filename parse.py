@@ -5,10 +5,16 @@ class ParseError(Exception):
     pass
 
 
+class Object:
+    def __init__(self):
+        self.noun = ""
+        self.adjectives = []
+
+
 # Makes command lowercase, removes punctuation, determiners, and other common extraneous input
 def sanitize(user_input):
     """
-    # Makes command lowercase, removes punctuation, determiners, and other common extraneous input
+    # Makes input lowercase, removes punctuation, determiners, and other common extraneous input
     :param user_input:
     :return: result_words:
     """
@@ -25,18 +31,39 @@ def sanitize(user_input):
     return result_words
 
 
-def parse_user_input(user_input, lexicon):
-    parsed_command = []
+def process_input(user_input, lexicon):
     sanitized_user_input = sanitize(user_input)
-    if not sanitized_user_input:
-        #print('parse_user_input ERROR: sanitized_user_input empty')
-        raise ParseError
-    parsed_command.append(lexicon.resolve(sanitized_user_input[0], 'verb'))
-    if len(sanitized_user_input) > 1:
-        parsed_command.append(lexicon.resolve(sanitized_user_input[1], 'noun'))
-        if len(sanitized_user_input) > 2:
-            parsed_command.append(lexicon.resolve(sanitized_user_input[2], 'noun'))
-            if len(sanitized_user_input) > 3:
-                print('parse_user_input ERROR: sanitized_user_input contains more than 3 parts')
-                raise ParseError
-    return len(parsed_command), parsed_command
+    return parse(sanitized_user_input, lexicon)
+
+
+def parse(phrase, lexicon):
+    verb = phrase[0]
+    objects = []
+    phrase = phrase[1:]
+    while phrase:
+        obj, phrase = parse_object(phrase, lexicon)
+        objects.append(obj)
+    return verb, objects
+
+
+def parse_object(phrase, lexicon):
+    """
+    :param phrase:
+    :param lexicon:
+    :return:
+    """
+    obj = Object()
+
+    i = 0
+    while i < len(phrase):
+        if phrase[i] in lexicon.adjectives:
+            obj.adjectives.append(phrase[i])
+        elif phrase[i] in lexicon.nouns:
+                obj.noun = phrase[i]
+                return obj, phrase[i+1:]
+        else:
+            raise ParseError('word {0} not valid noun or adjective'.format(phrase[i]))
+        i += 1
+    raise ParseError('no valid noun found in phrase \"{0}\"'.format(' '.join(phrase)))
+
+

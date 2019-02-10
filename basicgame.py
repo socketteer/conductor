@@ -1,10 +1,13 @@
 from event import *
-from parse import parse_user_input, ParseError
+from parse import *
 from item import Item, Container
 from tbenv import TurnBasedEnv
 from lexicon import Lexicon
 from gameutil import *
+from entityresolution import *
 
+class CommandError(Exception):
+    pass
 
 class Game:
     def __init__(self, events=[], debug=False):
@@ -101,6 +104,7 @@ class Game:
         else:
             item = Item(name, aliases=aliases)
         self.import_item(item, location, aliases, container)
+        return item
 
     def import_item(self, item, location=None, aliases=[], container=False):
         self.items[item.name] = item
@@ -153,7 +157,7 @@ class Game:
             self.exe(action_event)
         except KeyError:
             if not self.generate_action(action, target1, target2, action_type):
-                raise NoGenerator
+                raise NoGenerator("No generator exists for action {0}".format(action))
             else:
                 return self.process_command(action, target1, target2, action_type)
 
@@ -180,31 +184,36 @@ class Game:
     def turn(self):
         try:
             #self.step_debug()
-            command = input('\n>')
+            user_input = input('\n>')
             try:
-                command_type, parsed_command = parse_user_input(command, self.lexicon)
-            except ParseError:
+                command, objects = process_input(user_input, self.lexicon)
+            except ParseError as e:
+                print(repr(e))
                 return self.turn()
-            if command_type == 1:
-                if parsed_command[0] == 'exit':
+            command = self.lexicon.resolve(command, pos='verb')
+            if len(objects) == 0:
+                if command == 'exit':
                     quit()
-                elif parsed_command[0] == 'pass':
+                elif command == 'pass':
                     return True
                 else:
-                    result = self.exe(self.zero_operand_actions[parsed_command[0]])
-            elif command_type == 2:
-                result = self.process_command(parsed_command[0], parsed_command[1], action_type=1)
-            elif command_type == 3:
-                result = self.process_command(parsed_command[0], parsed_command[1], parsed_command[2], action_type=2)
+                    result = self.exe(self.zero_operand_actions[command])
+            elif len(objects) == 1:
+                obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
+                result = self.process_command(command, obj.name, action_type=1)
+            elif len(objects) == 2:
+                obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
+                obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.items, self.lexicon)
+                result = self.process_command(command, obj1.name, obj2.name, action_type=2)
             else:
-                print('{0}.turn ERROR: invalid command type {1}'.format(type(self), command_type))
+                raise CommandError("Too many objects in input {0}".format(user_input))
                 return False
             if not result:
                 return False
             else:
                 return True
-        except NoGenerator:
-            print('no generator found for action')
+        except NoGenerator as e:
+            print(repr(e))
             return False
         '''except TypeError as e:
             print(repr(e))
@@ -212,7 +221,6 @@ class Game:
         except KeyError:
             print('action or target invalid')
             return False'''
-
 
     def run(self):
         if self.env == 'uninitialized':
