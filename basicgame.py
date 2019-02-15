@@ -98,11 +98,11 @@ class Game:
                                     open_precondition(container)],
                      effects=[close_effect(container)])
 
-    def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in'):
+    def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
         if container:
-            item = Container(name, preposition, aliases=aliases, attributes=attributes)
+            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article)
         else:
-            item = Item(name, aliases=aliases, attributes=attributes)
+            item = Item(name, aliases=aliases, attributes=attributes, article=article)
         self.add_item(item, location, container)
         return item
 

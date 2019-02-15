@@ -7,9 +7,9 @@ from event import *
 from parse import *
 
 class Room(Container):
-    def __init__(self, name, aliases=[], attributes=[]):
+    def __init__(self, name, aliases=[], attributes=[], article='the'):
         # TODO two word names
-        Container.__init__(self, name, portable=False, aliases=aliases, attributes=attributes)
+        Container.__init__(self, name, portable=False, aliases=aliases, attributes=attributes, article=article)
         self.items = set()
         self.items.add(self)
         self.name = name
@@ -87,11 +87,11 @@ class RoomGame(Game):
                                     location_accessible_precondition(container)],
                      effects=[room_put_effect(item, self.inventory, self.current_location, container)])
 
-    def create_item(self, name, room=None, location=None, aliases=[], attributes=[], container=False, preposition='in'):
+    def create_item(self, name, room=None, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
         if container:
-            item = Container(name, preposition, aliases=aliases, attributes=attributes)
+            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article)
         else:
-            item = Item(name, aliases=aliases, attributes=attributes)
+            item = Item(name, aliases=aliases, attributes=attributes, article=article)
         self.add_item(item, room, location)
         return item
 
