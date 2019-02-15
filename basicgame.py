@@ -9,6 +9,10 @@ from entityresolution import *
 class CommandError(Exception):
     pass
 
+class OperationError(Exception):
+    pass
+
+
 class Game:
     def __init__(self, events=[], debug=False):
         self.lexicon = Lexicon()
@@ -114,8 +118,7 @@ class Game:
             if location:
                 put_util(item, self.containers[location])
         except KeyError:
-            print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
-            return
+            raise OperationError('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
         self.update_lexicon(item)
 
     def update_lexicon(self, item):
@@ -134,8 +137,7 @@ class Game:
         elif action_type == 2:
             self.two_operand_actions[action_name] = {}
         else:
-            print('{0}.add_action ERROR: invalid action_type {1}'.format(type(self), action_type))
-            return
+            raise OperationError('{0}.add_action ERROR: invalid action_type {1}'.format(type(self), action_type))
         self.action_generators[action_name] = action_generator
 
     def generate_actions(self):
@@ -237,3 +239,12 @@ class Game:
         if self.env == 'uninitialized':
             self.init_env()
         self.env.run()
+
+    def query_events(self):
+        state_change = 0
+        for event in self.events:
+            success, event, predicate = event.query()
+            if success:
+                event.report_success()
+                state_change = 1
+        return state_change

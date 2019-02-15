@@ -1,5 +1,6 @@
 from env import Env
 
+
 class TurnBasedEnv(Env):
     def __init__(self, events, player_turn, max_steps=None):
         Env.__init__(self, events, max_steps)

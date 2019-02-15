@@ -1,4 +1,3 @@
-import event
 from basicgame import *
 from gameutil import *
 from roomutil import *
@@ -6,8 +5,9 @@ from item import Item, Container
 from event import *
 from parse import *
 
+
 class Room(Container):
-    def __init__(self, name, aliases=[], attributes=[], article='the'):
+    def __init__(self, name, aliases=[], attributes=[], article='the '):
         # TODO two word names
         Container.__init__(self, name, portable=False, aliases=aliases, attributes=attributes, article=article)
         self.items = set()
@@ -17,7 +17,13 @@ class Room(Container):
         self.items.add(self.floor)
 
     def description(self):
-        return 'You are in the {0}.'.format(self.name) + enumerate_items(self)
+        return enumerate_items(self)
+
+
+class Portal(Item):
+    def __init__(self, name, destination, aliases=[], attributes=[], article='the '):
+        Item.__init__(self, name, portable=False, aliases=aliases, attributes=attributes, article=article)
+        self.destination = destination
 
 
 class RoomGame(Game):
@@ -46,7 +52,7 @@ class RoomGame(Game):
         try:
             self.current_location = self.rooms[current_location]
         except KeyError:
-            print('{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location))
+            raise OperationError('{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location))
 
     def init_actions(self):
         Game.init_actions(self)
@@ -76,7 +82,7 @@ class RoomGame(Game):
     def drop(self, item):
         return Event(preconditions=[portable_precondition(item),
                                     item_in_precondition(item, self.inventory)],
-                     effects=[room_drop_effect(item, self.inventory, self.current_location)])
+                     effects=[room_drop_effect(item, self.current_location)])
 
     def put(self, item, container):
         return Event(preconditions=[portable_precondition(item),
@@ -85,7 +91,7 @@ class RoomGame(Game):
                                     item_not_in_precondition(item, container),
                                     container_precondition(container),
                                     location_accessible_precondition(container)],
-                     effects=[room_put_effect(item, self.inventory, self.current_location, container)])
+                     effects=[room_put_effect(item, self.current_location, container)])
 
     def create_item(self, name, room=None, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
         if container:
@@ -104,8 +110,7 @@ class RoomGame(Game):
                 else:
                     put_util(item, room.floor)
             except KeyError:
-                print('{0}.create_item ERROR: location {1} not in list of items'.format(type(self), location))
-                return
+                raise OperationError('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
         self.items[item.name] = item
         self.update_lexicon(item)
 
@@ -116,18 +121,21 @@ class RoomGame(Game):
         self.add_item(room.floor)
         return room
 
-    def link_rooms(self, source, destination, two_way=True):
+    def link_rooms(self, source, destination, two_way=True, portal1name='default', portal2name='default'):
         source.items.add(destination)
+        dest_portal = Portal("{0}_door".format(destination.name), destination=destination, aliases=["door", "doorway"])
+        self.add_item(dest_portal, room=source)
         if two_way:
             destination.items.add(source)
+            source_portal = Portal("{0}_door".format(source.name), destination=source, aliases=["door", "doorway"])
+            self.add_item(source_portal, room=destination)
 
     def run(self):
         if not self.current_location:
-            print('{0}.run ERROR: variable current_location must be set.'.format(type(self)))
-            return
+            raise OperationError('{0}.run ERROR: variable current_location must be set.'.format(type(self)))
         Game.run(self)
 
-    def report_state(self):
+    def report_state(selgamef):
         pass
 
     def turn(self):

@@ -6,8 +6,9 @@ kitchen = game.create_room('kitchen')
 #kitchen.description = lambda: "the kitchen is big as hell and full of hot dogs"
 bathroom = game.create_room('bathroom')
 door = game.link_rooms(kitchen, bathroom)
-cheese = game.create_item('cheese', room=kitchen, aliases=['cheddar', 'food'], attributes=['stinky'])
+cheese = game.create_item('cheese', room=kitchen, aliases=['cheddar', 'food'], attributes=['stinky'], article="")
 soup = game.create_item('soup', room=kitchen, aliases=['stew', 'food'], attributes=['hot', 'liquid'])
+soup.description = lambda: "You see a bowl of soup."
 egg = game.create_item('egg', room=bathroom, aliases=['food'], attributes=['hot', 'hard', 'shelled'])
 game.init_game_state('kitchen')
 game.print_debugging_info()

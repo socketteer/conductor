@@ -1,35 +1,16 @@
-
-x game: universal actions
-x game: merge items and containers
-x game: import existing items
-x game: rooms
-    x portals
-    item accessibility
-    descriptions
-x game: lazily evaluate actions
-x game: detailed error msgs for failed actions
-x game: autodescriptions
-    x implement
-    x test
-    x templates
-error handling overhaul
 chained event error reporting
 standard item libraries
 game access time
 action duration
 game state representation
     saving/loading with dictionary
-x object attribute word list
 parsing
-    x lexicon
-    x auto aliasing
-    x alias ambiguity
-    pos identification
     parsing multiple word entity resolution
-    x specification via modifier
-    modular
 narrative class
     scenes
+    scene-based events
+global vs local events
+    room events
 active objects
 dialogue system
 

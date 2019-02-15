@@ -10,11 +10,11 @@ class Item:
         self.assign_article(article)
 
     def assign_article(self, article):
-        if article=='auto':
+        if article == 'auto':
             if any(vowel == self.name[0] for vowel in ['a', 'e', 'i', 'o', 'u']):
-                self.article = 'an'
+                self.article = 'an '
             else:
-                self.article = 'a'
+                self.article = 'a '
         else:
             self.article = article
 
@@ -29,7 +29,7 @@ class Item:
         self.attributes.remove(attribute)
 
     def description(self):
-        return 'You see {0} {1}.'.format(self.article, self.name)
+        return 'You see {0}{1}.'.format(self.article, self.name)
 
 
 class Container(Item):
