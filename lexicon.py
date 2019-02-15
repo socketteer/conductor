@@ -32,11 +32,14 @@ class Lexicon:
         if not map_to:
             map_to == word
         if pos == 'noun':
-            self.nouns[word] = map_to
+            if word not in self.nouns:
+                self.nouns[word] = map_to
         elif pos == 'verb':
-            self.verbs[word] = map_to
+            if word not in self.verbs:
+                self.verbs[word] = map_to
         elif pos == 'adjective':
-            self.adjectives[word] = map_to
+            if word not in self.adjectives:
+                self.adjectives[word] = map_to
         else:
             print('Lexicon:add_word ERROR: invalid part of speech parameter {0}'.format(pos))
 

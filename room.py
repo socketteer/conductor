@@ -1,22 +1,23 @@
 import event
-from basicgame import Game
+from basicgame import *
 from gameutil import *
 from roomutil import *
 from item import Item, Container
 from event import *
+from parse import *
 
-class Room:
-    def __init__(self, name):
+class Room(Container):
+    def __init__(self, name, aliases=[], attributes=[]):
+        # TODO two word names
+        Container.__init__(self, name, portable=False, aliases=aliases, attributes=attributes)
         self.items = set()
         self.items.add(self)
         self.name = name
+        self.floor = Container('{0}_floor'.format(self.name), preposition='on', aliases=['floor'])
+        self.items.add(self.floor)
 
-
-class Portal(Item):
-    def __init__(self, name, source, destination, attributes=[]):
-        Item.__init__(self, name, portable=False, attributes=attributes)
-        self.source = source
-        self.destination = destination
+    def description(self):
+        return 'You are in the {0}.'.format(self.name) + enumerate_items(self)
 
 
 class RoomGame(Game):
@@ -33,9 +34,12 @@ class RoomGame(Game):
         self.zero_operand_actions['look'] = Event(preconditions=[],
                                                   effects=[[lambda: room_look_util(self.current_location), '']])
 
+
     def init_game_items(self):
         self.create_item('inventory', container=True)
         self.inventory = self.items['inventory']
+        self.zero_operand_actions['inventory'] = Event(preconditions=[],
+                                                       effects=[access_inventory_effect(self.inventory)])
         self.current_location = None
 
     def init_game_state(self, current_location):
@@ -48,6 +52,11 @@ class RoomGame(Game):
         Game.init_actions(self)
         self.add_action('go', self.go, 1)
 
+    def accessible_items(self):
+        accessible = self.current_location.items.union(self.inventory.items)
+        accessible.add(self.inventory)
+        return accessible
+
     def change_location(self, new_location):
         self.current_location = new_location
 
@@ -57,30 +66,54 @@ class RoomGame(Game):
                          effects=[[lambda: self.change_location(room), "You go to the {0}".format(room.name)]])
         return go_event
 
-    def create_item(self, name, room=None, location=None, aliases=[], container=False, preposition='in'):
+    def get(self, item):
+        return Event(preconditions=[item_in_room_precondition(item, self.current_location),
+                                    portable_precondition(item),
+                                    item_not_in_precondition(item, self.inventory),
+                                    location_accessible_precondition(item.location)],
+                     effects=[room_get_effect(item, self.inventory, self.current_location)])
+
+    def drop(self, item):
+        return Event(preconditions=[portable_precondition(item),
+                                    item_in_precondition(item, self.inventory)],
+                     effects=[room_drop_effect(item, self.inventory, self.current_location)])
+
+    def put(self, item, container):
+        return Event(preconditions=[portable_precondition(item),
+                                    location_accessible_precondition(item.location),
+                                    item_accessible_precondition(item, self.current_location, self.inventory),
+                                    item_not_in_precondition(item, container),
+                                    container_precondition(container),
+                                    location_accessible_precondition(container)],
+                     effects=[room_put_effect(item, self.inventory, self.current_location, container)])
+
+    def create_item(self, name, room=None, location=None, aliases=[], attributes=[], container=False, preposition='in'):
         if container:
-            item = Container(name, preposition, aliases=aliases)
+            item = Container(name, preposition, aliases=aliases, attributes=attributes)
         else:
-            item = Item(name, aliases=aliases)
-        self.import_item(item, room, location, aliases)
+            item = Item(name, aliases=aliases, attributes=attributes)
+        self.add_item(item, room, location)
         return item
 
-    def import_item(self, item, room=None, location=None, aliases=[]):
+    def add_item(self, item, room=None, location=None):
         if room:
             room.items.add(item)
+            try:
+                if location:
+                    put_util(item, self.items[location])
+                else:
+                    put_util(item, room.floor)
+            except KeyError:
+                print('{0}.create_item ERROR: location {1} not in list of items'.format(type(self), location))
+                return
         self.items[item.name] = item
-        try:
-            if location:
-                put_util(item, self.items[location])
-        except KeyError:
-            print('{0}.create_item ERROR: location {1} not in list of items'.format(type(self), location))
-            return
-        self.lexicon.nouns[item.name] = item.name
+        self.update_lexicon(item)
 
     def create_room(self, name):
         room = Room(name)
         self.rooms[name] = room
-        self.import_item(room)
+        self.add_item(room)
+        self.add_item(room.floor)
         return room
 
     def link_rooms(self, source, destination, two_way=True):
@@ -93,3 +126,55 @@ class RoomGame(Game):
             print('{0}.run ERROR: variable current_location must be set.'.format(type(self)))
             return
         Game.run(self)
+
+    def report_state(self):
+        pass
+
+    def turn(self):
+        try:
+            self.report_state()
+            user_input = input('\n>')
+            try:
+                command, objects = process_input(user_input, self.lexicon)
+            except ParseError as e:
+                print(repr(e))
+                return self.turn()
+            command = self.lexicon.resolve(command, pos='verb')
+            if len(objects) == 0:
+                if command == 'exit':
+                    quit()
+                elif command == 'pass':
+                    return True
+                else:
+                    result = self.exe(self.zero_operand_actions[command])
+            elif len(objects) == 1:
+                obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
+                result = self.process_command(command, obj.name, action_type=1)
+            elif len(objects) == 2:
+                obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
+                obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.accessible_items(), self.lexicon)
+                result = self.process_command(command, obj1.name, obj2.name, action_type=2)
+            else:
+                raise CommandError("Too many objects in input {0}".format(user_input))
+            if not result:
+                return False
+            else:
+                return True
+        except NoGenerator as e:
+            print(repr(e))
+            return False
+        except TypeError as e:
+            print(repr(e))
+            return False
+        except KeyError as e:
+            print(repr(e))
+            return False
+        except CommandError as e:
+            print(repr(e))
+            return False
+        except ResolutionFailure as e:
+            print(repr(e))
+            return False
+        except ResolutionAmbiguity as e:
+            print(repr(e))
+            return False

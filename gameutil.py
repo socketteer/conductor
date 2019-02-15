@@ -42,8 +42,8 @@ def description_util(item):
 
 def put_util(item, dest):
     if hasattr(item, 'location'):
-        item.location.contains.remove(item)
-    dest.contains.add(item)
+        item.location.items.remove(item)
+    dest.items.add(item)
     item.location = dest
 
 
@@ -57,9 +57,9 @@ def look_util(containers):
             print(container.description())
         else:
             print('You see the {0}'.format(container.name))
-        if hasattr(container, 'contains') and container.contains:
+        if hasattr(container, 'items') and container.items:
             if accessible(container):
-                look_util(container.contains)
+                look_util(container.items)
 
 
 
@@ -73,7 +73,7 @@ def portable_precondition(item):
 
 
 def container_precondition(container):
-    return [lambda: hasattr(container, 'contains'), '{0} is not a container'.format(container.name)]
+    return [lambda: hasattr(container, 'items'), '{0} is not a container'.format(container.name)]
 
 
 def location_accessible_precondition(container):

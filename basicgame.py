@@ -98,15 +98,15 @@ class Game:
                                     open_precondition(container)],
                      effects=[close_effect(container)])
 
-    def create_item(self, name, location=None, aliases=[], container=False, preposition='in'):
+    def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in'):
         if container:
-            item = Container(name, preposition, aliases=aliases)
+            item = Container(name, preposition, aliases=aliases, attributes=attributes)
         else:
-            item = Item(name, aliases=aliases)
-        self.import_item(item, location, aliases, container)
+            item = Item(name, aliases=aliases, attributes=attributes)
+        self.add_item(item, location, container)
         return item
 
-    def import_item(self, item, location=None, aliases=[], container=False):
+    def add_item(self, item, location=None, container=False):
         self.items[item.name] = item
         if container:
             self.containers[item.name] = item
@@ -116,7 +116,14 @@ class Game:
         except KeyError:
             print('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
             return
-        self.lexicon.nouns[item.name] = item.name
+        self.update_lexicon(item)
+
+    def update_lexicon(self, item):
+        self.lexicon.add_word(item.name, pos='noun')
+        for alias in item.aliases:
+            self.lexicon.add_word(alias, pos='noun')
+        for attribute in item.attributes:
+            self.lexicon.add_word(attribute, pos='adjective')
 
     def add_action(self, action_name, action_generator, action_type):
         if action_type == 0:
@@ -175,8 +182,12 @@ class Game:
             if action_type == 1:
                 self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
             else:
-                self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
-                                                                                                    self.items[target2])
+                try:
+                    self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
+                                                                                                        self.items[target2])
+                except KeyError:
+                    self.two_operand_actions[action][target1] = {}
+                    return self.generate_action(action, target1, target2, action_type)
             return True
         else:
             return False
@@ -215,12 +226,12 @@ class Game:
         except NoGenerator as e:
             print(repr(e))
             return False
-        '''except TypeError as e:
+        except TypeError as e:
             print(repr(e))
             return False
         except KeyError:
             print('action or target invalid')
-            return False'''
+            return False
 
     def run(self):
         if self.env == 'uninitialized':

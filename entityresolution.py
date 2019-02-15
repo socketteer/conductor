@@ -33,6 +33,7 @@ def filter_by_attributes(attributes, items):
 
 def resolve_phrase(word, attributes, items, lex):
     # TODO efficient order?
+    items = {item.name: item for item in items}
     viable = resolve_word(word, items, lex)
     if len(viable) == 0:
         raise ResolutionFailure('unable to resolve noun {0}'.format(word))
