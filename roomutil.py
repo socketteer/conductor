@@ -1,5 +1,5 @@
 import gameutil
-
+import debug_util
 
 def room_look_util(room):
     print(room.description())
@@ -31,6 +31,7 @@ def get_util(item, inventory, room):
     gameutil.put_util(item, inventory)
     remove_from_container(item, room)
 
+
 def list_container_contents(container):
     if container.items:
         description = "The {0} contains:".format(container.name)
@@ -40,6 +41,7 @@ def list_container_contents(container):
     else:
         description = "The {0} is empty.".format(container.name)
     return description
+
 
 def room_put_util(item, room, destination):
     gameutil.put_util(item, destination)
@@ -52,8 +54,9 @@ precondition templates
 """
 
 
-def item_in_room_precondition(item, room):
-    return [lambda: item in room.items, 'There is no {0} at your location.'.format(item.name)]
+def item_in_room_precondition(item):
+    return [lambda game: item in game.current_location,
+            'There is no {0} at your location.'.format(item.name)]
 
 
 def item_accessible_precondition(item, room, inventory):

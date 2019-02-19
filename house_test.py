@@ -1,6 +1,7 @@
 from room import RoomGame
 from debug_util import *
 
+
 game = RoomGame()
 game.load_lexicon(verb_file='wordmappings')
 foyer = game.create_room('foyer', aliases=['hallway'])
@@ -39,19 +40,19 @@ game.create_item(name='refrigerator', room=kitchen, aliases=['fridge'], containe
 
 game.init_game_state(foyer)
 
-go_upstairs = game.generate_action('go', target1=upstairs_foyer.id)
-go_upstairs.effects[0][1] = "You go up the stairs."
+go_upstairs = game.action_generators['go'](upstairs_foyer)
+#go_upstairs.effects[0][1] = "You go up the stairs."
+go_downstairs = game.action_generators['go'](foyer_upstairs)
 
-go_downstairs = game.generate_action('go', target1=foyer_upstairs.id)
-go_downstairs.effects[0][1] = "You go down the stairs."
+print('current location: ', game.current_location.id)
+game.exe(go_upstairs)
+game.current_location = upstairs_hallway
+print('current location: ', game.current_location.id)
+game.exe(go_downstairs)
+#game.one_operand_actions['go'][foyer_upstairs.id] = game.go(foyer_upstairs)
+#go_downstairs.effects[0][1] = "You go down the stairs."
 print(go_downstairs.preconditions)
-
-print_container(foyer.items)
-
-print_container(upstairs_hallway.items)
+print(go_downstairs.effects)
 
 
-game.turn()
-print_container(upstairs_hallway.items)
-game.turn()
-print_container(upstairs_hallway.items)
+game.run()

@@ -14,3 +14,4 @@ global vs local events
 active objects
 dialogue system
 separate name & id?
+mutable action behavior without total overload

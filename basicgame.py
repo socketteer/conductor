@@ -5,6 +5,7 @@ from tbenv import TurnBasedEnv
 from lexicon import Lexicon
 from gameutil import *
 from entityresolution import *
+import game_actions
 
 class CommandError(Exception):
     pass
@@ -49,17 +50,17 @@ class Game:
                                                   effects=[[lambda: look_util(self.containers.values()), '']])
 
     def init_actions(self):
-        self.add_action('put', self.put, 2)
-        self.add_action('get', self.get, 1)
-        self.add_action('drop', self.drop, 1)
-        self.add_action('open', self.open, 1)
-        self.add_action('close', self.close, 1)
-        self.add_action('look', self.inspect, 1)
+        self.add_action('put', game_actions.put, 2)
+        self.add_action('get', game_actions.get, 1)
+        self.add_action('drop', game_actions.drop, 1)
+        self.add_action('open', game_actions.open, 1)
+        self.add_action('close', game_actions.close, 1)
+        self.add_action('look', game_actions.inspect, 1)
 
     def init_game_items(self):
         self.create_item('inventory', container=True)
         self.inventory = self.items['inventory']
-        self.create_item('floor', aliases=['ground'], container=True, preposition='on')
+        self.floor = self.create_item('floor', aliases=['ground'], container=True, preposition='on')
 
     def init_env(self):
         self.env = TurnBasedEnv(events=self.events,
@@ -71,39 +72,7 @@ class Game:
         if noun_file:
             self.lexicon.read_word_map(noun_file, 'noun')
 
-    def inspect(self, item):
-        return Event(preconditions=[],
-                     effects=[inspect_effect(item)])
 
-    def put(self, item, container):
-        return Event(preconditions=[portable_precondition(item),
-                                    location_accessible_precondition(item.location),
-                                    item_not_in_precondition(item, container),
-                                    container_precondition(container),
-                                    location_accessible_precondition(container)],
-                     effects=[get_effect(item, self.inventory),
-                              put_effect(item, container)])
-
-    def get(self, item):
-        return Event(preconditions=[portable_precondition(item),
-                                    item_not_in_precondition(item, self.inventory),
-                                    location_accessible_precondition(item.location)],
-                     effects=[get_effect(item, self.inventory)])
-
-    def drop(self, item):
-        return Event(preconditions=[portable_precondition(item),
-                                    item_in_precondition(item, self.inventory)],
-                     effects=[drop_effect(item, self.containers['floor'])])
-
-    def open(self, container):
-        return Event(preconditions=[openable_precondition(container),
-                                    closed_precondition(container)],
-                     effects=[open_effect(container)])
-
-    def close(self, container):
-        return Event(preconditions=[openable_precondition(container),
-                                    open_precondition(container)],
-                     effects=[close_effect(container)])
 
     def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
         if container:
@@ -174,7 +143,7 @@ class Game:
                 return self.process_command(action, target1, target2, action_type)
 
     def exe(self, action, silent=False):
-        success, event, predicate = action.query()
+        success, event, predicate = action.query(self)
         if not silent:
             if not success:
                 event.report_failure(predicate)
@@ -183,15 +152,19 @@ class Game:
         return success
 
     def generate_action(self, action, target1, target2=None, action_type=1):
+        #use items instead of id as param?
         if action in self.action_generators:
             try:
                 if action_type == 1:
                     self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
-                    return self.one_operand_actions[action][target1]
+                    act = self.one_operand_actions[action][target1]
+                    return act
                 else:
                     try:
-                        self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1], self.items[target2])
-                        return self.two_operand_actions[action][target1][target2]
+                        self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
+                                                                                                            self.items[target2])
+                        act = self.two_operand_actions[action][target1][target2]
+                        return act
                     except KeyError:
                         self.two_operand_actions[action][target1] = {}
                         return self.generate_action(action, target1, target2, action_type)
@@ -249,7 +222,7 @@ class Game:
     def query_events(self):
         state_change = 0
         for event in self.events:
-            success, event, predicate = event.query()
+            success, event, predicate = event.query(self)
             if success:
                 event.report_success()
                 state_change = 1

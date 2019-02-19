@@ -17,20 +17,21 @@ class Event:
         self.effects = effects
         #self.description = description
 
-    def query(self):
+    def query(self, game):
         """
-
-        :return: returns whether event is executed; if not, second return value is predicate which failed
+        :return: returns whether event is executed;
+                self, and third return value is predicate which failed
+                or None
         """
         for predicate in self.preconditions:
-            if not predicate[0]():
+            if not predicate[0](game):
                 return False, self, predicate
-        self.execute()
+        self.execute(game)
         return True, self, None
 
-    def execute(self):
+    def execute(self, game):
         for effect in self.effects:
-            effect[0]()
+            effect[0](game)
 
     def report_failure(self, predicate):
         try:
