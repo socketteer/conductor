@@ -9,9 +9,8 @@ def enumerate_items(room):
     descriptions = ""
     for item in room.items:
         if hasattr(item, 'location') and gameutil.accessible(item.location):
-            descriptions += ' '
             descriptions += item.description()
-
+            descriptions += ' '
     return descriptions
 
 
@@ -54,11 +53,12 @@ precondition templates
 
 
 def item_in_room_precondition(item, room):
-    return [lambda: item in room.items, 'there is no {0} at your location'.format(item.name)]
+    return [lambda: item in room.items, 'There is no {0} at your location.'.format(item.name)]
 
 
 def item_accessible_precondition(item, room, inventory):
-    return [lambda: item in room.items or item in inventory.items, 'you cannot access a {0}'.format(item.name)]
+    return [lambda: item in room.items or item in inventory.items, 'You cannot access a {0}.'.format(item.name)]
+
 
 """
 effect templates
@@ -66,11 +66,11 @@ effect templates
 
 
 def room_drop_effect(item, room):
-    return [lambda: drop_util(item, room), 'you drop the {0}'.format(item.name)]
+    return [lambda: drop_util(item, room), 'You drop the {0}.'.format(item.name)]
 
 
 def room_get_effect(item, inventory, room):
-    return [lambda: get_util(item, inventory, room), 'you get the {0}'.format(item.name)]
+    return [lambda: get_util(item, inventory, room), 'You get the {0}.'.format(item.name)]
 
 
 def access_inventory_effect(inventory):
@@ -79,4 +79,4 @@ def access_inventory_effect(inventory):
 
 def room_put_effect(item, room, destination):
     return[lambda: room_put_util(item, room, destination),
-           'you put the {0} in the {1}'.format(item.name, destination.name)]
+           'You put the {0} in the {1}.'.format(item.name, destination.name)]

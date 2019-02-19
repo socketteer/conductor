@@ -14,12 +14,15 @@ class OperationError(Exception):
 
 
 class Game:
-    def __init__(self, events=[], debug=False):
+    def __init__(self, events=None, debug=False):
         self.lexicon = Lexicon()
         self.init_game_structure()
         self.init_actions()
         self.init_game_items()
-        self.events = events
+        if events:
+            self.events = events
+        else:
+            self.events = []
         self.env = 'uninitialized'
         self.debug = debug
 
@@ -104,16 +107,16 @@ class Game:
 
     def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
         if container:
-            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article)
+            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article, items=self.items)
         else:
-            item = Item(name, aliases=aliases, attributes=attributes, article=article)
+            item = Item(name, aliases=aliases, attributes=attributes, article=article, items=self.items)
         self.add_item(item, location, container)
         return item
 
     def add_item(self, item, location=None, container=False):
-        self.items[item.name] = item
+        self.items[item.id] = item
         if container:
-            self.containers[item.name] = item
+            self.containers[item.id] = item
         try:
             if location:
                 put_util(item, self.containers[location])
@@ -141,18 +144,18 @@ class Game:
         self.action_generators[action_name] = action_generator
 
     def generate_actions(self):
-        for item_name, item in self.items.items():
+        for item_id, item in self.items.items():
             for action_name, action in self.two_operand_actions.items():
-                action[item_name] = {}
-                for other_item_name, other_item in self.items.items():
-                    action[item_name][other_item_name] = self.action_generators[action_name](item, other_item)
+                action[item_id] = {}
+                for other_item_id, other_item in self.items.items():
+                    action[item_id][other_item_id] = self.action_generators[action_name](item, other_item)
             for action_name, action in self.one_operand_actions.items():
-                action[item_name] = self.action_generators[action_name](item)
+                action[item_id] = self.action_generators[action_name](item)
 
     def generate_actions_template(self):
-        for item_name, item in self.items.items():
+        for item_id, item in self.items.items():
             for action_name, action in self.two_operand_actions.items():
-                action[item_name] = {}
+                action[item_id] = {}
 
     def process_command(self, action, target1=None, target2=None, action_type=1):
         try:
@@ -179,20 +182,23 @@ class Game:
                 event.report_success()
         return success
 
-    def generate_action(self, action, target1, target2, action_type=1):
+    def generate_action(self, action, target1, target2=None, action_type=1):
         if action in self.action_generators:
-            if action_type == 1:
-                self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
-            else:
-                try:
-                    self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
-                                                                                                        self.items[target2])
-                except KeyError:
-                    self.two_operand_actions[action][target1] = {}
-                    return self.generate_action(action, target1, target2, action_type)
-            return True
+            try:
+                if action_type == 1:
+                    self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
+                    return self.one_operand_actions[action][target1]
+                else:
+                    try:
+                        self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1], self.items[target2])
+                        return self.two_operand_actions[action][target1][target2]
+                    except KeyError:
+                        self.two_operand_actions[action][target1] = {}
+                        return self.generate_action(action, target1, target2, action_type)
+            except AttributeError:
+                raise AttributeError('Invalid type for action')
         else:
-            return False
+            return None
 
     def turn(self):
         try:
@@ -248,3 +254,12 @@ class Game:
                 event.report_success()
                 state_change = 1
         return state_change
+
+    def alter_attributes(self, item, aliases=None, attributes=None):
+        if not isinstance(aliases, list):
+            aliases = [aliases]
+        if not isinstance(attributes, list):
+            attributes = [attributes]
+        item.add_aliases(aliases)
+        item.add_attributes(attributes)
+        self.update_lexicon(item)

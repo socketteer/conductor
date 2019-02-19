@@ -4,16 +4,17 @@ from roomutil import *
 from item import Item, Container
 from event import *
 from parse import *
+from debug_util import *
 
 
 class Room(Container):
-    def __init__(self, name, aliases=[], attributes=[], article='the '):
+    def __init__(self, name, id='auto', aliases=None, attributes=None, article='the ', items=None):
         # TODO two word names
-        Container.__init__(self, name, portable=False, aliases=aliases, attributes=attributes, article=article)
+        Container.__init__(self, name, id=id, portable=False, aliases=aliases, attributes=attributes, article=article, items=items)
         self.items = set()
         self.items.add(self)
         self.name = name
-        self.floor = Container('{0}_floor'.format(self.name), preposition='on', aliases=['floor'])
+        self.floor = Container('{0}_floor'.format(self.name), preposition='on', aliases=['floor'], items=items)
         self.items.add(self.floor)
 
     def description(self):
@@ -21,13 +22,13 @@ class Room(Container):
 
 
 class Portal(Item):
-    def __init__(self, name, destination, aliases=[], attributes=[], article='the '):
-        Item.__init__(self, name, portable=False, aliases=aliases, attributes=attributes, article=article)
+    def __init__(self, name, destination, id='auto', aliases=None, attributes=None, article='the ', items=None):
+        Item.__init__(self, name, id=id, portable=False, aliases=aliases, attributes=attributes, article=article, items=items)
         self.destination = destination
 
 
 class RoomGame(Game):
-    def __init__(self, events=[]):
+    def __init__(self, events=None):
         Game.__init__(self, events)
 
     def init_game_structure(self):
@@ -40,19 +41,17 @@ class RoomGame(Game):
         self.zero_operand_actions['look'] = Event(preconditions=[],
                                                   effects=[[lambda: room_look_util(self.current_location), '']])
 
-
     def init_game_items(self):
-        self.create_item('inventory', container=True)
-        self.inventory = self.items['inventory']
+        self.inventory = self.create_item('inventory', container=True)
         self.zero_operand_actions['inventory'] = Event(preconditions=[],
                                                        effects=[access_inventory_effect(self.inventory)])
         self.current_location = None
 
     def init_game_state(self, current_location):
         try:
-            self.current_location = self.rooms[current_location]
+            self.current_location = current_location
         except KeyError:
-            raise OperationError('{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location))
+            raise OperationError('{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location.name))
 
     def init_actions(self):
         Game.init_actions(self)
@@ -66,10 +65,11 @@ class RoomGame(Game):
     def change_location(self, new_location):
         self.current_location = new_location
 
-    def go(self, room):
-        go_event = Event(preconditions=[[lambda: not self.current_location == room, "You are already in the {}".format(room.name)],
-                                        item_in_room_precondition(room, self.current_location)],
-                         effects=[[lambda: self.change_location(room), "You go to the {0}".format(room.name)]])
+    def go(self, portal):
+        go_event = Event(preconditions=[[lambda: hasattr(portal, 'destination'), "You cannot go there."],
+                                        [lambda: not self.current_location == portal.destination, "You are already in the {}.".format(portal.destination.name)],
+                                        item_in_room_precondition(portal, self.current_location)],
+                         effects=[[lambda: self.change_location(portal.destination), "You go to the {0}.".format(portal.destination.name)]])
         return go_event
 
     def get(self, item):
@@ -93,11 +93,11 @@ class RoomGame(Game):
                                     location_accessible_precondition(container)],
                      effects=[room_put_effect(item, self.current_location, container)])
 
-    def create_item(self, name, room=None, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
+    def create_item(self, name, room=None, location=None, aliases=None, attributes=None, container=False, portable=False, preposition='in', article='auto', id='auto'):
         if container:
-            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article)
+            item = Container(name, id=id, preposition=preposition, aliases=aliases, attributes=attributes, portable=portable, article=article, items=self.items)
         else:
-            item = Item(name, aliases=aliases, attributes=attributes, article=article)
+            item = Item(name, id=id, aliases=aliases, attributes=attributes, portable=portable, article=article, items=self.items)
         self.add_item(item, room, location)
         return item
 
@@ -111,31 +111,37 @@ class RoomGame(Game):
                     put_util(item, room.floor)
             except KeyError:
                 raise OperationError('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
-        self.items[item.name] = item
+        self.items[item.id] = item
         self.update_lexicon(item)
 
-    def create_room(self, name):
-        room = Room(name)
-        self.rooms[name] = room
+    def create_room(self, name, aliases=None, attributes=None):
+        room = Room(name, aliases=aliases, attributes=attributes, items=self.items)
+        self.rooms[room.id] = room
         self.add_item(room)
         self.add_item(room.floor)
         return room
 
     def link_rooms(self, source, destination, two_way=True, portal1name='default', portal2name='default'):
-        source.items.add(destination)
-        dest_portal = Portal("{0}_door".format(destination.name), destination=destination, aliases=["door", "doorway"])
+        #source.items.add(destination)
+        if portal1name == 'default':
+            portal1name = destination.name
+        if portal2name == 'default':
+            portal2name = source.name
+        dest_portal = Portal(portal1name, id='{0}_to_{1}'.format(source.id, destination.id), destination=destination, aliases=["door", "doorway"], items=self.items)
+        source_portal = None
         self.add_item(dest_portal, room=source)
         if two_way:
-            destination.items.add(source)
-            source_portal = Portal("{0}_door".format(source.name), destination=source, aliases=["door", "doorway"])
+            #destination.items.add(source)
+            source_portal = Portal(portal2name, id='{1}_to_{0}'.format(source.id, destination.id), destination=source, aliases=["door", "doorway"], items=self.items)
             self.add_item(source_portal, room=destination)
+        return dest_portal, source_portal
 
     def run(self):
         if not self.current_location:
             raise OperationError('{0}.run ERROR: variable current_location must be set.'.format(type(self)))
         Game.run(self)
 
-    def report_state(selgamef):
+    def report_state(self):
         pass
 
     def turn(self):
@@ -157,7 +163,7 @@ class RoomGame(Game):
                     result = self.exe(self.zero_operand_actions[command])
             elif len(objects) == 1:
                 obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
-                result = self.process_command(command, obj.name, action_type=1)
+                result = self.process_command(command, obj.id, action_type=1)
             elif len(objects) == 2:
                 obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
                 obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.accessible_items(), self.lexicon)
@@ -177,6 +183,9 @@ class RoomGame(Game):
         except KeyError as e:
             print(repr(e))
             return False
+        '''except AttributeError as e:
+            print(repr(e))
+            return False
         except CommandError as e:
             print(repr(e))
             return False
@@ -184,5 +193,5 @@ class RoomGame(Game):
             print(repr(e))
             return False
         except ResolutionAmbiguity as e:
-            print(repr(e))
-            return False
+            print(repr(e)
+            return False'''

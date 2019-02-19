@@ -4,6 +4,7 @@ class Narrative:
         self.clock = 0
         self.scenes = {}
         self.vars = {}
+        self.current_scenes = []
 
 
 class Scene:
@@ -19,11 +20,6 @@ class Scene:
 
     def prompt(self, narrative, world):
         pass
-
-    def step(self, narrative, world):
-        self.prompt()
-        world.turn()
-        world.query_events()
 
     def query_events(self):
         state_change = 0

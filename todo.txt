@@ -13,4 +13,4 @@ global vs local events
     room events
 active objects
 dialogue system
-
+separate name & id?
