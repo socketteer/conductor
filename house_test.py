@@ -41,7 +41,6 @@ game.create_item(name='refrigerator', room=kitchen, aliases=['fridge'], containe
 game.init_game_state(foyer)
 
 go_upstairs = game.action_generators['go'](upstairs_foyer)
-#go_upstairs.effects[0][1] = "You go up the stairs."
 go_downstairs = game.action_generators['go'](foyer_upstairs)
 
 print('current location: ', game.current_location.id)

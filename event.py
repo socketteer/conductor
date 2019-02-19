@@ -2,11 +2,6 @@ def clause(predicates):
     return lambda: any(predicate() is True for predicate in predicates)
 
 
-'''
-class FailedPrecondition(Exception):
-    pass
-'''
-
 class Event:
     def __init__(self, preconditions, effects):
         """
@@ -23,14 +18,14 @@ class Event:
                 self, and third return value is predicate which failed
                 or None
         """
-        for predicate in self.preconditions:
+        for predicate in self.preconditions.values():
             if not predicate[0](game):
                 return False, self, predicate
         self.execute(game)
         return True, self, None
 
     def execute(self, game):
-        for effect in self.effects:
+        for effect in self.effects.values():
             effect[0](game)
 
     def report_failure(self, predicate):
@@ -40,7 +35,7 @@ class Event:
             print("Event:report_failure ERROR: predicate has no description")
 
     def report_success(self):
-        for effect in self.effects:
+        for effect in self.effects.values():
             try:
                 print(effect[1])
             except TypeError:

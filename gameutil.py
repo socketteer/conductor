@@ -65,7 +65,7 @@ def look_util(containers):
 """
 precondition templates
 """
-
+#TODO make everything resolved from game?
 
 def portable_precondition(item):
     return [lambda game: item.portable, '{0} is not portable'.format(item.name)]
@@ -75,8 +75,8 @@ def container_precondition(container):
     return [lambda game: hasattr(container, 'items'), '{0} is not a container'.format(container.name)]
 
 
-def location_accessible_precondition(container):
-    return [lambda game: accessible(container), 'you cant access the {0}'.format(container.name)]
+def location_accessible_precondition(item):
+    return [lambda game: accessible(game.items[item.location.id]), 'you cant access the {0}'.format(item.location.name)]
 
 
 def openable_precondition(container):
@@ -84,19 +84,20 @@ def openable_precondition(container):
 
 
 def closed_precondition(container):
-    return [lambda game: not container.open, 'the {0} is open'.format(container.name)]
+    return [lambda game: not game.items[container.id].open, 'the {0} is open'.format(container.name)]
 
 
 def open_precondition(container):
-    return [lambda game: container.open, 'the {0} is closed'.format(container.name)]
+    return [lambda game: game.items[container.id].open, 'the {0} is closed'.format(container.name)]
 
 
 def item_in_precondition(item, container):
-    return [lambda game: item_in(item, container), 'the {0} is not in the {1}'.format(item.name, container.name)]
+    return [lambda game: item_in(game.items[item.id], game.items[container.id]), 'the {0} is not in the {1}'.format(item.name, container.name)]
 
 
+# TODO try to change name; see what happens
 def item_not_in_precondition(item, container):
-    return [lambda game: not item_in(item, container), 'the {0} is in the {1}'.format(item.name, container.name)]
+    return [lambda game: not item_in(game.items[item.id], game.items[container.id]), 'the {0} is in the {1}'.format(item.name, container.name)]
 
 
 

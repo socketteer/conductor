@@ -15,3 +15,4 @@ active objects
 dialogue system
 separate name & id?
 mutable action behavior without total overload
+make preconditions/effect lists dictionaries
