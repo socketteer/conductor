@@ -69,18 +69,18 @@ effect templates
 """
 
 
-def room_drop_effect(item, room):
-    return [lambda: drop_util(item, room), 'You drop the {0}.'.format(item.name)]
+def room_drop_effect(item):
+    return [lambda game: drop_util(item), 'You drop the {0}.'.format(item.name)]
 
 
-def room_get_effect(item, inventory, room):
-    return [lambda: get_util(item, inventory, room), 'You get the {0}.'.format(item.name)]
+def room_get_effect(item):
+    return [lambda game: get_util(item, game.inventory, game.current_location), 'You get the {0}.'.format(item.name)]
 
 
-def access_inventory_effect(inventory):
-    return[lambda: print(list_container_contents(inventory)), '']
+def access_inventory_effect():
+    return[lambda game: print(list_container_contents(game.current_location)), '']
 
 
-def room_put_effect(item, room, destination):
-    return[lambda: room_put_util(item, room, destination),
+def room_put_effect(item, destination):
+    return[lambda game: room_put_util(item, game.current_location, destination),
            'You put the {0} in the {1}.'.format(item.name, destination.name)]

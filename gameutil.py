@@ -1,6 +1,4 @@
-"""
-good help
-"""
+import debug_util
 
 """
 custom exceptions
@@ -132,4 +130,4 @@ def close_effect(container):
     return [lambda game: close_util(container), 'you close the {0}'.format(container.name)]
 
 def access_inventory_effect():
-    return[lambda game: print(list_container_contents(game.inventory)), '']
+    return[lambda game: print(debug_util.list_container_contents(game.inventory)), '']

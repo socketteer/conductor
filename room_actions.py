@@ -4,8 +4,7 @@ from gameutil import *
 
 
 def go(portal):
-    go_event = Event(preconditions=[[lambda game: game.current_location.name == 'hallway', "not in hallway"],
-                                    [lambda game: hasattr(portal, 'destination'), "You cannot go there."],
+    go_event = Event(preconditions=[[lambda game: hasattr(portal, 'destination'), "You cannot go there."],
                                     [lambda game: not game.current_location == portal.destination,
                                      "You are already in the {}.".format(portal.destination.name)],
                                     item_in_room_precondition(portal)],
