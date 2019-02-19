@@ -55,12 +55,13 @@ precondition templates
 
 
 def item_in_room_precondition(item):
-    return [lambda game: item in game.current_location,
+    return [lambda game: item in game.current_location.items,
             'There is no {0} at your location.'.format(item.name)]
 
 
-def item_accessible_precondition(item, room, inventory):
-    return [lambda: item in room.items or item in inventory.items, 'You cannot access a {0}.'.format(item.name)]
+def item_accessible_precondition(item):
+    return [lambda game: item in game.current_location.items or item in game.inventory.items,
+            'You cannot access a {0}.'.format(item.name)]
 
 
 """
