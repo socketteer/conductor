@@ -46,8 +46,8 @@ class Game:
         self.zero_operand_actions = {}
         self.one_operand_actions = {}
         self.two_operand_actions = {}
-        self.zero_operand_actions['look'] = Event(preconditions=[],
-                                                  effects=[[lambda: look_util(self.containers.values()), '']])
+        self.zero_operand_actions['look'] = Event(preconditions={},
+                                                  effects={'look': [lambda: look_util(self.containers.values()), '']})
 
     def init_actions(self):
         self.add_action('put', game_actions.put, 2)
@@ -132,9 +132,9 @@ class Game:
                 print('do not use this method to execute zero operand actions; execute directly instead')
                 return False
             elif action_type == 1:
-                action_event = self.one_operand_actions[action][target1]
+                action_event = self.one_operand_actions[action][target1.id]
             elif action_type == 2:
-                action_event = self.two_operand_actions[action][target1][target2]
+                action_event = self.two_operand_actions[action][target1.id][target2.id]
             self.exe(action_event)
         except KeyError:
             if not self.generate_action(action, target1, target2, action_type):
@@ -152,21 +152,20 @@ class Game:
         return success
 
     def generate_action(self, action, target1, target2=None, action_type=1):
-        #use items instead of id as param?
         if action in self.action_generators:
             try:
                 if action_type == 1:
-                    self.one_operand_actions[action][target1] = self.action_generators[action](self.items[target1])
-                    act = self.one_operand_actions[action][target1]
+                    self.one_operand_actions[action][target1.id] = self.action_generators[action](target1)
+                    act = self.one_operand_actions[action][target1.id]
                     return act
                 else:
                     try:
-                        self.two_operand_actions[action][target1][target2] = self.action_generators[action](self.items[target1],
-                                                                                                            self.items[target2])
-                        act = self.two_operand_actions[action][target1][target2]
+                        self.two_operand_actions[action][target1.id][target2.id] = self.action_generators[action](target1,
+                                                                                                            target2)
+                        act = self.two_operand_actions[action][target1.id][target2.id]
                         return act
                     except KeyError:
-                        self.two_operand_actions[action][target1] = {}
+                        self.two_operand_actions[action][target1.id] = {}
                         return self.generate_action(action, target1, target2, action_type)
             except AttributeError:
                 raise AttributeError('Invalid type for action')
@@ -192,11 +191,11 @@ class Game:
                     result = self.exe(self.zero_operand_actions[command])
             elif len(objects) == 1:
                 obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
-                result = self.process_command(command, obj.name, action_type=1)
+                result = self.process_command(command, obj, action_type=1)
             elif len(objects) == 2:
                 obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
                 obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.items, self.lexicon)
-                result = self.process_command(command, obj1.name, obj2.name, action_type=2)
+                result = self.process_command(command, obj1, obj2, action_type=2)
             else:
                 raise CommandError("Too many objects in input {0}".format(user_input))
                 return False

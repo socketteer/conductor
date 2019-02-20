@@ -19,7 +19,7 @@ class Room(Container):
         self.items.add(self.floor)
 
     def description(self):
-        return debug_util.enumerate_items(self)
+        return roomutil.enumerate_items(self)
 
 
 class Portal(Item):
@@ -39,13 +39,13 @@ class RoomGame(Game):
         self.zero_operand_actions = {}
         self.one_operand_actions = {}
         self.two_operand_actions = {}
-        self.zero_operand_actions['look'] = Event(preconditions=[],
-                                                  effects=[[lambda: roomutil.room_look_util(self.current_location), '']])
+        self.zero_operand_actions['look'] = Event(preconditions={},
+                                                  effects={'look': [lambda game: roomutil.room_look_util(game.current_location), '']})
 
     def init_game_items(self):
         self.inventory = self.create_item('inventory', container=True)
-        self.zero_operand_actions['inventory'] = Event(preconditions=[],
-                                                       effects=[gameutil.access_inventory_effect()])
+        self.zero_operand_actions['inventory'] = Event(preconditions={},
+                                                       effects={'inventory': gameutil.access_inventory_effect()})
         self.current_location = None
 
     def init_game_state(self, current_location):
@@ -136,11 +136,11 @@ class RoomGame(Game):
                     result = self.exe(self.zero_operand_actions[command])
             elif len(objects) == 1:
                 obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
-                result = self.process_command(command, obj.id, action_type=1)
+                result = self.process_command(command, obj, action_type=1)
             elif len(objects) == 2:
                 obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.accessible_items(), self.lexicon)
                 obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.accessible_items(), self.lexicon)
-                result = self.process_command(command, obj1.name, obj2.name, action_type=2)
+                result = self.process_command(command, obj1, obj2, action_type=2)
             else:
                 raise CommandError("Too many objects in input {0}".format(user_input))
             if not result:

@@ -19,7 +19,6 @@ large_bedroom = game.create_room('bedroom', aliases=['room'], attributes=['large
 garage = game.create_room('garage')
 shoes = game.create_item('shoes', aliases=['boots', 'footwear'], attributes=['stinky'], room=foyer, article="")
 
-
 kitchen_foyer, foyer_kitchen = game.link_rooms(foyer, kitchen)
 living_foyer, foyer_living = game.link_rooms(foyer, living_room)
 dining_living, living_dining = game.link_rooms(living_room, dining_room)
@@ -36,22 +35,15 @@ hallway_sbr, sbr_hallway = game.link_rooms(small_bedroom, upstairs_hallway)
 hallway_mbr, mbr_hallway = game.link_rooms(medium_bedroom, upstairs_hallway)
 hallway_lbr, lbr_hallway = game.link_rooms(large_bedroom, upstairs_hallway)
 
-game.create_item(name='refrigerator', room=kitchen, aliases=['fridge'], container=True)
+fridge = game.create_item(name='refrigerator', room=kitchen, aliases=['fridge', 'appliance'], container=True)
+fridge.open = False
 
 game.init_game_state(foyer)
 
-go_upstairs = game.action_generators['go'](upstairs_foyer)
-go_downstairs = game.action_generators['go'](foyer_upstairs)
+go_upstairs = game.generate_action('go', upstairs_foyer)
+go_downstairs = game.generate_action('go', foyer_upstairs)
 
-print('current location: ', game.current_location.id)
-game.exe(go_upstairs)
-game.current_location = upstairs_hallway
-print('current location: ', game.current_location.id)
-game.exe(go_downstairs)
-#game.one_operand_actions['go'][foyer_upstairs.id] = game.go(foyer_upstairs)
-#go_downstairs.effects[0][1] = "You go down the stairs."
-print(go_downstairs.preconditions)
-print(go_downstairs.effects)
-
+go_upstairs.effects['change_location'][1] = "You go upstairs."
+go_downstairs.effects['change_location'][1] = "You go downstairs."
 
 game.run()
