@@ -61,14 +61,28 @@ def look_util(containers):
                 look_util(container.items)
 
 
+def list_container_contents(container):
+    if container.items:
+        description = "The {0} contains:".format(container.name)
+        for item in container.items:
+            description += '\n'
+            description += item.name
+    else:
+        description = "The {0} is empty.".format(container.name)
+    return description
+
 
 """
 precondition templates
 """
-#TODO make everything resolved from game?
+
 
 def portable_precondition(item):
     return [lambda game: item.portable, '{0} is not portable'.format(item.name)]
+
+
+def container_accessible_precondition(container):
+    return [lambda game: accessible(game.items[container.id]), 'the {0} is not accessible.'.format(container.name)]
 
 
 def container_precondition(container):
@@ -76,7 +90,7 @@ def container_precondition(container):
 
 
 def location_accessible_precondition(item):
-    return [lambda game: accessible(game.items[item.location.id]), 'you cant access the {0}'.format(item.location.name)]
+    return [lambda game: not hasattr(item, 'location') or accessible(game.items[item.location.id]), 'you cant access the {0}'.format(item.name)]
 
 
 def openable_precondition(container):
@@ -131,4 +145,4 @@ def close_effect(container):
     return [lambda game: close_util(container), 'you close the {0}'.format(container.name)]
 
 def access_inventory_effect():
-    return[lambda game: print(debug_util.list_container_contents(game.inventory)), '']
+    return[lambda game: print(list_container_contents(game.inventory)), '']

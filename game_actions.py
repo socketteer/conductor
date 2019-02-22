@@ -7,6 +7,7 @@ def put(item, container):
                                 'item_location_accessible': location_accessible_precondition(item),
                                 'container': container_precondition(container),
                                 'item_not_in_container': item_not_in_precondition(item, container),
+                                'container_accessible': container_accessible_precondition(container),
                                 'container_location_accessible': location_accessible_precondition(container)},
                  effects={'get': get_effect(item),
                           'put': put_effect(item, container)})

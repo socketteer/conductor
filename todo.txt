@@ -1,7 +1,8 @@
-chained event error reporting
+error handling
 standard item libraries
 game access time
 action duration
+doors (separate object; belongs to portal; 1:2)
 game state representation
     saving/loading with dictionary
 parsing
@@ -13,3 +14,4 @@ global vs local events
     room events
 active objects
 dialogue system
+organize directory

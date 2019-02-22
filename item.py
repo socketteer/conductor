@@ -3,31 +3,26 @@ class InitError(Exception):
 
 
 class Item:
-    def __init__(self, name, id='auto', portable=True, attributes=None, aliases=None, article='auto', items=-1):
+    def __init__(self, name, portable=True, id='auto', article='auto', items_dict=-1):
         self.name = name
-        if not aliases:
-            self.aliases = []
-        else:
-            self.aliases = aliases
-        self.aliases.append(name)
+        self.aliases = {'thing', 'object', 'item'}
+        self.aliases.add(name)
         self.portable = portable
         self.attributes = set()
-        self.add_attributes(attributes)
         self.assign_article(article)
-        self.assign_id(id, items)
+        self.assign_id(id, items_dict)
 
-    def assign_id(self, id, items):
+    def assign_id(self, id, items_dict):
         if id == 'auto':
-            if items == -1:
+            if items_dict == -1:
                 raise InitError("for auto id assignment, need to pass items")
             else:
                 i = 1
-                while self.name + str(i) in items:
+                while self.name + str(i) in items_dict:
                     i += 1
                 self.id = self.name + str(i)
         else:
             self.id = id
-
 
     def assign_article(self, article):
         if article == 'auto':
@@ -46,7 +41,7 @@ class Item:
     def add_aliases(self, aliases):
         if aliases:
             for alias in aliases:
-                self.aliases.append(alias)
+                self.aliases.add(alias)
 
     def remove_attribute(self, attribute):
         self.attributes.remove(attribute)
@@ -56,7 +51,7 @@ class Item:
 
 
 class Container(Item):
-    def __init__(self, name, id='auto', preposition='in', portable=False, attributes=None, aliases=None, article='a', items=None):
-        Item.__init__(self, name=name, id=id, portable=portable, attributes=attributes, aliases=aliases, article=article, items=items)
+    def __init__(self, name, id='auto', preposition='in', portable=False, article='a', items_dict=-1):
+        Item.__init__(self, name=name, id=id, portable=portable, article=article, items_dict=items_dict)
         self.items = set()
         self.preposition = preposition

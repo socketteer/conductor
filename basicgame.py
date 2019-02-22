@@ -29,7 +29,6 @@ class Game:
 
     def print_debugging_info(self):
         print(self.items)
-        #print(self.containers)
         print(self.zero_operand_actions)
         print(self.one_operand_actions)
         print(self.two_operand_actions)
@@ -60,7 +59,8 @@ class Game:
     def init_game_items(self):
         self.create_item('inventory', container=True)
         self.inventory = self.items['inventory']
-        self.floor = self.create_item('floor', aliases=['ground'], container=True, preposition='on')
+        self.floor = self.create_item('floor', container=True, preposition='on')
+        self.floor.add_aliases(['ground'])
 
     def init_env(self):
         self.env = TurnBasedEnv(events=self.events,
@@ -72,13 +72,11 @@ class Game:
         if noun_file:
             self.lexicon.read_word_map(noun_file, 'noun')
 
-
-
-    def create_item(self, name, location=None, aliases=[], attributes=[], container=False, preposition='in', article='auto'):
+    def create_item(self, name, location=None, container=False, preposition='in', article='auto'):
         if container:
-            item = Container(name, preposition, aliases=aliases, attributes=attributes, article=article, items=self.items)
+            item = Container(name, preposition, article=article, items_dict=self.items)
         else:
-            item = Item(name, aliases=aliases, attributes=attributes, article=article, items=self.items)
+            item = Item(name, article=article, items_dict=self.items)
         self.add_item(item, location, container)
         return item
 
@@ -167,7 +165,7 @@ class Game:
                     except KeyError:
                         self.two_operand_actions[action][target1.id] = {}
                         return self.generate_action(action, target1, target2, action_type)
-            except AttributeError:
+            except AttributeError as e:
                 raise AttributeError('Invalid type for action')
         else:
             return None
