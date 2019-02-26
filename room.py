@@ -24,13 +24,14 @@ class Room(Container):
                                items_dict=game.items)
         self.floor.add_aliases(['floor', 'ground'])
         self.items.add(self.floor)
+        self.portals = set()
 
     def description(self):
         return roomutil.enumerate_items(self)
 
 
 class Portal(Item):
-    def __init__(self, game, name, destination, door=None, id='auto', article='the '):
+    def __init__(self, game, name, destination, door=None, id='auto', article='the'):
         Item.__init__(self,
                       name,
                       id=id,
@@ -126,13 +127,14 @@ class RoomGame(Game):
             room.items.add(item)
             try:
                 if location:
-                    put_util(item, self.items[location])
+                    put_util(item, location)
                 else:
                     put_util(item, room.floor)
             except KeyError:
-                raise OperationError('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
+                raise OperationError('{0}.add_item ERROR: location {1} not in self.items'.format(type(self), location.id))
         self.items[item.id] = item
         self.update_lexicon(item)
+        return item
 
     def create_room(self, name):
         room = Room(self, name)
@@ -163,12 +165,14 @@ class RoomGame(Game):
         dest_portal.add_aliases(destination.aliases)
         source_portal = None
         self.add_item(dest_portal, room=source)
+        source.portals.add(dest_portal)
         if door:
             door = Door(self,
                         name='{0}_{1}_door'.format(source.id, destination.id),
                         open=door_open,
                         locked=door_locked)
             self.add_item(door)
+            destination.portals.add(source_portal)
             dest_portal.door = door
 
         if two_way:
@@ -192,41 +196,43 @@ class RoomGame(Game):
         pass
 
     def turn(self):
+        self.report_state()
+        user_input = input('\n>')
+        msg = None
         try:
-            self.report_state()
-            user_input = input('\n>')
-            try:
-                command, objects = process_input(user_input, self.lexicon)
-            except ParseError as e:
-                print(repr(e))
-                return self.turn()
-            command = self.lexicon.resolve(command, pos='verb')
-            if len(objects) == 0:
-                if command == 'exit':
-                    quit()
-                elif command == 'pass':
-                    return True
-                else:
-                    result = self.exe(self.zero_operand_actions[command])
-            elif len(objects) == 1:
-                obj = resolve_phrase(objects[0].noun,
-                                     objects[0].adjectives,
-                                     self.accessible_items(),
-                                     self.lexicon)
-                result = self.process_command(command, obj, action_type=1)
-            elif len(objects) == 2:
-                obj1 = resolve_phrase(objects[0].noun,
-                                      objects[0].adjectives,
-                                      self.accessible_items(),
-                                      self.lexicon)
-                obj2 = resolve_phrase(objects[1].noun,
-                                      objects[1].adjectives,
-                                      self.accessible_items(),
-                                      self.lexicon)
-                result = self.process_command(command, obj1, obj2, action_type=2)
-            else:
-                raise CommandError("Too many objects in input {0}".format(user_input))
-            if not result:
-                return False
-            else:
+            command, objects = process_input(user_input, self.lexicon)
+        except ParseError as e:
+            print(repr(e))
+            return self.turn()
+        command = self.lexicon.resolve(command, pos='verb')
+        if len(objects) == 0:
+            if command == 'exit':
+                quit()
+            elif command == 'pass':
                 return True
+            else:
+                result, msg = self.exe(self.zero_operand_actions[command])
+        elif len(objects) == 1:
+            obj = resolve_phrase(objects[0].noun,
+                                 objects[0].adjectives,
+                                 self.accessible_items(),
+                                 self.lexicon)
+            result, msg = self.process_command(command, obj, action_type=1)
+        elif len(objects) == 2:
+            obj1 = resolve_phrase(objects[0].noun,
+                                  objects[0].adjectives,
+                                  self.accessible_items(),
+                                  self.lexicon)
+            obj2 = resolve_phrase(objects[1].noun,
+                                  objects[1].adjectives,
+                                  self.accessible_items(),
+                                  self.lexicon)
+            result, msg = self.process_command(command, obj1, obj2, action_type=2)
+        else:
+            raise CommandError("Too many objects in input {0}".format(user_input))
+        if not result:
+            return False
+        else:
+            print(msg)
+            return True
+

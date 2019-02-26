@@ -10,25 +10,31 @@ class Event:
         """
         self.preconditions = preconditions
         self.effects = effects
-        #self.description = description
 
     def query(self, game):
         """
-        :return: returns whether event is executed;
-                self, and third return value is predicate which failed
+        :param game:
+        :return: whether event is executed, message from predicate which failed
                 or None
         """
         for predicate in self.preconditions.values():
-            if not predicate[0](game):
-                return False, self, predicate
-        self.execute(game)
-        return True, self, None
+            success = predicate[0](game)
+            if not success:
+                return False, predicate[1](game)
+        return True, None
 
     def execute(self, game):
+        """
+        :param game:
+        :return:
+        """
+        msg = ""
         for effect in self.effects.values():
             effect[0](game)
+            msg += effect[1](game)
+        return msg
 
-    def report_failure(self, predicate):
+    """def report_failure(self, predicate):
         try:
             print(predicate[1])
         except TypeError:
@@ -39,7 +45,7 @@ class Event:
             try:
                 print(effect[1])
             except TypeError:
-                pass
+                pass"""
 
 
 

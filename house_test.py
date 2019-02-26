@@ -42,12 +42,19 @@ hallway_mbr, mbr_hallway = game.link_rooms(medium_bedroom, upstairs_hallway)
 hallway_lbr, lbr_hallway = game.link_rooms(large_bedroom, upstairs_hallway)
 
 fridge = game.add_item(catalogue.Refrigerator(items_dict=game.items), room=kitchen)
+game.alter_attributes(fridge, attributes=['white', 'big'])
+cheese = game.create_item('cheese',
+                          room=kitchen,
+                          location=fridge,
+                          portable=True)
+
 
 go_upstairs = game.generate_action('go', upstairs_foyer)
 go_downstairs = game.generate_action('go', foyer_upstairs)
 
-go_upstairs.effects['change_location'][1] = "You go upstairs."
-go_downstairs.effects['change_location'][1] = "You go downstairs."
+go_upstairs.effects['change_location'][1] = lambda game: "You go upstairs."
+go_downstairs.effects['change_location'][1] = lambda game: "You go downstairs."
+
 
 game.init_game_state(foyer)
 game.run()

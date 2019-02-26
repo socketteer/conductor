@@ -4,8 +4,10 @@ import debug_util
 custom exceptions
 """
 
+
 class InvalidOperation(Exception):
     pass
+
 
 class NoGenerator(Exception):
     pass
@@ -78,40 +80,48 @@ precondition templates
 
 
 def portable_precondition(item):
-    return [lambda game: item.portable, '{0} is not portable'.format(item.name)]
+    return [lambda game: game.items[item.id].portable,
+            lambda game: '{0} is not portable'.format(game.items[item.id].name)]
 
 
 def container_accessible_precondition(container):
-    return [lambda game: accessible(game.items[container.id]), 'the {0} is not accessible.'.format(container.name)]
+    return [lambda game: accessible(game.items[container.id]),
+            lambda game: 'the {0} is not accessible.'.format(game.items[container.id].name)]
 
 
 def container_precondition(container):
-    return [lambda game: hasattr(container, 'items'), '{0} is not a container'.format(container.name)]
+    return [lambda game: hasattr(game.items[container.id], 'items'),
+            lambda game: '{0} is not a container'.format(game.items[container.id].name)]
 
 
 def location_accessible_precondition(item):
-    return [lambda game: not hasattr(item, 'location') or accessible(game.items[item.location.id]), 'you cant access the {0}'.format(item.name)]
+    return [lambda game: not hasattr(game.items[item.id], 'location') or accessible(game.items[item.location.id]),
+            lambda game: 'you cant access the {0}'.format(game.items[item.id].name)]
 
 
 def openable_precondition(container):
-    return [lambda game: hasattr(container, 'open'), '{0} is not able to be opened or closed'.format(container.name)]
+    return [lambda game: hasattr(game.items[container.id], 'open'),
+            lambda game: '{0} is not able to be opened or closed'.format(game.items[container.id].name)]
 
 
 def closed_precondition(container):
-    return [lambda game: not game.items[container.id].open, 'the {0} is open'.format(container.name)]
+    return [lambda game: not game.items[container.id].open,
+            lambda game: 'the {0} is open'.format(game.items[container.id].name)]
 
 
 def open_precondition(container):
-    return [lambda game: game.items[container.id].open, 'the {0} is closed'.format(container.name)]
+    return [lambda game: game.items[container.id].open,
+            lambda game: 'the {0} is closed'.format(game.items[container.id].name)]
 
 
 def item_in_precondition(item, container):
-    return [lambda game: item_in(game.items[item.id], game.items[container.id]), 'the {0} is not in the {1}'.format(item.name, container.name)]
+    return [lambda game: item_in(game.items[item.id], game.items[container.id]),
+            lambda game: 'the {0} is not in the {1}'.format(game.items[item.id].name, game.items[container.id].name)]
 
 
-# TODO try to change name; see what happens
 def item_not_in_precondition(item, container):
-    return [lambda game: not item_in(game.items[item.id], game.items[container.id]), 'the {0} is in the {1}'.format(item.name, container.name)]
+    return [lambda game: not item_in(game.items[item.id], game.items[container.id]),
+            lambda game: 'the {0} is in the {1}'.format(game.items[item.id].name, game.items[container.id].name)]
 
 
 
@@ -121,28 +131,37 @@ effect templates
 
 
 def get_effect(item):
-    return [lambda game: put_util(item, game.inventory), 'you take the {0}'.format(item.name)]
+    return [lambda game: put_util(game.items[item.id], game.inventory),
+            lambda game: 'you take the {0}'.format(game.items[item.id].name)]
 
 
 def put_effect(item, container):
-    return [lambda game: put_util(item, container),
-            'you put the {0} {1} the {2}'.format(item.name, container.preposition, container.name)]
+    return [lambda game: put_util(game.items[item.id], game.items[container.id]),
+            lambda game: 'you put the {0} {1} the {2}'.format(game.items[item.id].name,
+                                                              container.preposition,
+                                                              game.items[container.id].name)]
 
 
 def inspect_effect(item):
-    return [lambda game: inspect_util(item), description_util(item)]
+    return [lambda game: None,
+            lambda game: description_util(game.items[item.id])]
 
 
 def drop_effect(item):
-    return [lambda game: put_util(item, game.floor), 'you drop the {0}'.format(item.name)]
+    return [lambda game: put_util(game.items[item.id], game.floor),
+            lambda game: 'you drop the {0}'.format(game.items[item.id].name)]
 
 
 def open_effect(container):
-    return [lambda game: open_util(container), 'you open the {0}'.format(container.name)]
+    return [lambda game: open_util(game.items[container.id]),
+            lambda game: 'you open the {0}'.format(game.items[container.id].name)]
 
 
 def close_effect(container):
-    return [lambda game: close_util(container), 'you close the {0}'.format(container.name)]
+    return [lambda game: close_util(game.items[container.id]),
+            lambda game: 'you close the {0}'.format(game.items[container.id].name)]
+
 
 def access_inventory_effect():
-    return[lambda game: print(list_container_contents(game.inventory)), '']
+    return[lambda game: None,
+           lambda game: list_container_contents(game.inventory)]

@@ -1,3 +1,7 @@
+import nlgen
+import gameutil
+
+
 class InitError(Exception):
     pass
 
@@ -47,7 +51,9 @@ class Item:
         self.attributes.remove(attribute)
 
     def description(self):
-        return 'You see {0}{1}.'.format(self.article, self.name)
+        description = ""
+        description += 'You see {0}{1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
+        return description
 
 
 class Container(Item):
@@ -55,3 +61,10 @@ class Container(Item):
         Item.__init__(self, name=name, id=id, portable=portable, article=article, items_dict=items_dict)
         self.items = set()
         self.preposition = preposition
+
+    def description(self):
+        description = Item.description(self)
+        if gameutil.accessible(self):
+            for item in self.items:
+                description += item.description()
+        return description

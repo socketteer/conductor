@@ -1,9 +1,10 @@
 from env import Env
 
+# deprecated
 
 class TurnBasedEnv(Env):
-    def __init__(self, events, player_turn, max_steps=None):
-        Env.__init__(self, events, max_steps)
+    def __init__(self, player_turn, max_steps=None):
+        Env.__init__(self, events=[], max_steps=max_steps)
         self.player_turn = player_turn
 
     def step(self):

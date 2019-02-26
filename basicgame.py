@@ -1,14 +1,15 @@
 from event import *
 from parse import *
 from item import Item, Container
-from tbenv import TurnBasedEnv
 from lexicon import Lexicon
 from gameutil import *
 from entityresolution import *
 import game_actions
 
+
 class CommandError(Exception):
     pass
+
 
 class OperationError(Exception):
     pass
@@ -24,7 +25,6 @@ class Game:
             self.events = events
         else:
             self.events = []
-        self.env = 'uninitialized'
         self.debug = debug
 
     def print_debugging_info(self):
@@ -61,10 +61,6 @@ class Game:
         self.inventory = self.items['inventory']
         self.floor = self.create_item('floor', container=True, preposition='on')
         self.floor.add_aliases(['ground'])
-
-    def init_env(self):
-        self.env = TurnBasedEnv(events=self.events,
-                                player_turn=self.turn)
 
     def load_lexicon(self, verb_file=None, noun_file=None):
         if verb_file:
@@ -133,7 +129,7 @@ class Game:
                 action_event = self.one_operand_actions[action][target1.id]
             elif action_type == 2:
                 action_event = self.two_operand_actions[action][target1.id][target2.id]
-            self.exe(action_event)
+            return self.exe(action_event)
         except KeyError:
             if not self.generate_action(action, target1, target2, action_type):
                 raise NoGenerator("No generator exists for action {0}".format(action))
@@ -141,13 +137,11 @@ class Game:
                 return self.process_command(action, target1, target2, action_type)
 
     def exe(self, action, silent=False):
-        success, event, predicate = action.query(self)
+        success, msg = action.query(self)
         if not silent:
-            if not success:
-                event.report_failure(predicate)
-            else:
-                event.report_success()
-        return success
+            if success:
+                msg = action.execute(self)
+        return success, msg
 
     def generate_action(self, action, target1, target2=None, action_type=1):
         if action in self.action_generators:
@@ -186,20 +180,20 @@ class Game:
                 elif command == 'pass':
                     return True
                 else:
-                    result = self.exe(self.zero_operand_actions[command])
+                    result, msg = self.exe(self.zero_operand_actions[command])
             elif len(objects) == 1:
                 obj = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
-                result = self.process_command(command, obj, action_type=1)
+                result, msg = self.process_command(command, obj, action_type=1)
             elif len(objects) == 2:
                 obj1 = resolve_phrase(objects[0].noun, objects[0].adjectives, self.items, self.lexicon)
                 obj2 = resolve_phrase(objects[1].noun, objects[1].adjectives, self.items, self.lexicon)
-                result = self.process_command(command, obj1, obj2, action_type=2)
+                result, msg = self.process_command(command, obj1, obj2, action_type=2)
             else:
                 raise CommandError("Too many objects in input {0}".format(user_input))
-                return False
             if not result:
                 return False
             else:
+                print(msg)
                 return True
         except NoGenerator as e:
             print(repr(e))
@@ -212,23 +206,26 @@ class Game:
             return False
 
     def run(self):
-        if self.env == 'uninitialized':
-            self.init_env()
-        self.env.run()
+        while True:
+            state_change, msg = self.query_events()
+            if state_change:
+                print(msg)
+            self.turn()
 
     def query_events(self):
         state_change = 0
+        msg = None
         for event in self.events:
-            success, event, predicate = event.query(self)
+            success, _ = event.query(self)
             if success:
-                event.report_success()
+                msg = event.execute()
                 state_change = 1
-        return state_change
+        return state_change, msg
 
     def alter_attributes(self, item, aliases=None, attributes=None):
-        if not isinstance(aliases, list):
+        if aliases and not isinstance(aliases, list):
             aliases = [aliases]
-        if not isinstance(attributes, list):
+        if attributes and not isinstance(attributes, list):
             attributes = [attributes]
         item.add_aliases(aliases)
         item.add_attributes(attributes)

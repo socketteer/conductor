@@ -1,17 +1,17 @@
 import gameutil
 import debug_util
 
+
 def room_look_util(room):
     print(room.description())
 
 
-def enumerate_items(room):
-    descriptions = ""
-    for item in room.items:
-        if hasattr(item, 'location') and gameutil.accessible(item.location):
-            descriptions += item.description()
-            descriptions += ' '
-    return descriptions
+def enumerate_items(root, items):
+    items.append(root)
+    if hasattr(root, 'items'):
+        for item in root.items:
+            enumerate_items(item, items)
+    return items
 
 
 def add_to_container(item, container):
@@ -47,12 +47,12 @@ def close_door_util(door):
 
 
 def enter_door_util(portal):
-    if hasattr(portal, 'door'):
+    if portal.door:
         portal.door.open = True
 
 
 def passable_util(portal):
-    if not hasattr(portal, 'door'):
+    if not portal.door:
         return True
     else:
         return not portal.door.locked
@@ -63,17 +63,19 @@ precondition templates
 
 
 def item_in_room_precondition(item):
-    return [lambda game: item in game.current_location.items,
-            'There is no {0} at your location.'.format(item.name)]
+    return [lambda game: game.items[item.id] in game.current_location.items,
+            lambda game: 'There is no {0} at your location.'.format(game.items[item.id].name)]
 
 
 def item_accessible_precondition(item):
-    return [lambda game: item in game.current_location.items or item in game.inventory.items,
-            'You cannot access a {0}.'.format(item.name)]
+    return [lambda game: game.items[item.id] in game.current_location.items
+                         or game.items[item.id] in game.inventory.items,
+            lambda game: 'You cannot access a {0}.'.format(game.items[item.id].name)]
 
 
 def passable_precondition(portal):
-    return [lambda game: passable_util(game.items[portal.id]), 'The {0} is locked.'.format(portal.name)]
+    return [lambda game: passable_util(game.items[portal.id]),
+            lambda game: 'The {0} is locked.'.format(game.items[portal.id].name)]
 
 """
 effect templates
@@ -81,33 +83,36 @@ effect templates
 
 
 def room_drop_effect(item):
-    return [lambda game: drop_util(item, game.current_location),
-            'You drop the {0}.'.format(item.name)]
+    return [lambda game: drop_util(game.items[item.id], game.current_location),
+            lambda game: 'You drop the {0}.'.format(game.items[item.id].name)]
 
 
 def room_get_effect(item):
-    return [lambda game: get_util(item, game.inventory, game.current_location),
-            'You get the {0}.'.format(item.name)]
+    return [lambda game: get_util(game.items[item.id], game.inventory, game.current_location),
+            lambda game: 'You get the {0}.'.format(game.items[item.id].name)]
 
 
 def access_inventory_effect():
-    return [lambda game: print(gameutil.list_container_contents(game.current_location)), '']
+    return [lambda game: None,
+            lambda game: gameutil.list_container_contents(game.current_location)]
 
 
 def room_put_effect(item, destination):
-    return [lambda game: room_put_util(item, game.current_location, destination),
-            'You put the {0} in the {1}.'.format(item.name, destination.name)]
+    return [lambda game: room_put_util(game.items[item.id], game.current_location, game.items[destination.id]),
+            lambda game: 'You put the {0} in the {1}.'.format(game.items[item.id].name,
+                                                              game.items[destination.id].name)]
 
 
 def open_door_effect(item):
     return [lambda game: open_door_util(game.items[item.id].door),
-            "You open the {0}".format(item.name)]
+            lambda game: 'You open the {0}'.format(game.items[item.id].name)]
 
 
 def close_door_effect(item):
     return [lambda game: close_door_util(game.items[item.id].door),
-            "You close the {0}".format(item.name)]
+            lambda game: 'You close the {0}'.format(game.items[item.id].name)]
 
 
 def enter_door_effect(portal):
-    return [lambda game: enter_door_util(portal), '']
+    return [lambda game: enter_door_util(game.items[portal.id]),
+            lambda game: '']
