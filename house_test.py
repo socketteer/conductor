@@ -1,5 +1,6 @@
 from room import RoomGame
 import catalogue
+import roomutil
 from debug_util import *
 
 game = RoomGame()
@@ -47,6 +48,7 @@ cheese = game.create_item('cheese',
                           room=kitchen,
                           location=fridge,
                           portable=True)
+counter = game.add_item(catalogue.Counter(items_dict=game.items), room=kitchen)
 
 
 go_upstairs = game.generate_action('go', upstairs_foyer)

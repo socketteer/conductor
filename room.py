@@ -10,7 +10,7 @@ import catalogue
 
 
 class Room(Container):
-    def __init__(self, game, name, id='auto', article='the '):
+    def __init__(self, game, name, id='auto', article='the'):
         # TODO two word names
         Container.__init__(self,
                            name,
@@ -24,10 +24,10 @@ class Room(Container):
                                items_dict=game.items)
         self.floor.add_aliases(['floor', 'ground'])
         self.items.add(self.floor)
-        self.portals = set()
-
-    def description(self):
-        return roomutil.enumerate_items(self)
+        self.walls = Container('{0}_walls'.format(self.name),
+                               preposition='on',
+                               items_dict=game.items)
+        self.items.add(self.walls)
 
 
 class Portal(Item):
@@ -66,7 +66,8 @@ class RoomGame(Game):
         self.one_operand_actions = {}
         self.two_operand_actions = {}
         self.zero_operand_actions['look'] = Event(preconditions={},
-                                                  effects={'look': [lambda game: roomutil.room_look_util(game.current_location), '']})
+                                                  effects={'look': [lambda game: None,
+                                                                    lambda game: roomutil.room_look_util(game.current_location)]})
 
     def init_game_items(self):
         self.inventory = self.create_item('inventory', container=True)
@@ -164,17 +165,14 @@ class RoomGame(Game):
         dest_portal.add_aliases(["door", "doorway"])
         dest_portal.add_aliases(destination.aliases)
         source_portal = None
-        self.add_item(dest_portal, room=source)
-        source.portals.add(dest_portal)
+        self.add_item(dest_portal, room=source, location=source.walls)
         if door:
             door = Door(self,
                         name='{0}_{1}_door'.format(source.id, destination.id),
                         open=door_open,
                         locked=door_locked)
             self.add_item(door)
-            destination.portals.add(source_portal)
             dest_portal.door = door
-
         if two_way:
             source_portal = Portal(self,
                                    portal2name,
@@ -182,7 +180,7 @@ class RoomGame(Game):
                                    destination=source)
             source_portal.add_aliases(["door", "doorway"])
             source_portal.add_aliases(source.aliases)
-            self.add_item(source_portal, room=destination)
+            self.add_item(source_portal, room=destination, location=destination.walls)
             if door:
                 source_portal.door = door
         return dest_portal, source_portal

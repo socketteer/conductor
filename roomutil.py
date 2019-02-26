@@ -1,16 +1,23 @@
 import gameutil
 import debug_util
-
+import nlgen
 
 def room_look_util(room):
-    print(room.description())
+    floor_items = enumerate_items(room.floor)
+    #wall_items = enumerate_items(room.walls)
+    description = "You see:\n"
+    description += nlgen.nlitemlist(floor_items[1:])
+    description += '\n' + nlgen.nlitemlist(list(room.walls.items))
+    return description
 
 
-def enumerate_items(root, items):
+def enumerate_items(root, items=None):
+    if not items:
+        items = []
     items.append(root)
     if hasattr(root, 'items'):
         for item in root.items:
-            enumerate_items(item, items)
+            items = enumerate_items(item, items)
     return items
 
 

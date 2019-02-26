@@ -31,9 +31,9 @@ class Item:
     def assign_article(self, article):
         if article == 'auto':
             if any(vowel == self.name[0] for vowel in ['a', 'e', 'i', 'o', 'u']):
-                self.article = 'an '
+                self.article = 'an'
             else:
-                self.article = 'a '
+                self.article = 'a'
         else:
             self.article = article
 
@@ -52,7 +52,7 @@ class Item:
 
     def description(self):
         description = ""
-        description += 'You see {0}{1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
+        description += 'You see {0} {1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
         return description
 
 
@@ -66,5 +66,5 @@ class Container(Item):
         description = Item.description(self)
         if gameutil.accessible(self):
             for item in self.items:
-                description += item.description()
+                description += ' ' + item.description()
         return description
