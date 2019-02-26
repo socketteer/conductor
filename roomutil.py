@@ -5,7 +5,7 @@ import nlgen
 def room_look_util(room):
     floor_items = enumerate_items(room.floor)
     #wall_items = enumerate_items(room.walls)
-    description = "You see:\n"
+    description = "you see:\n"
     description += nlgen.nlitemlist(floor_items[1:])
     description += '\n' + nlgen.nlitemlist(list(room.walls.items))
     return description
@@ -15,7 +15,7 @@ def enumerate_items(root, items=None):
     if not items:
         items = []
     items.append(root)
-    if hasattr(root, 'items'):
+    if hasattr(root, 'items') and gameutil.accessible(root):
         for item in root.items:
             items = enumerate_items(item, items)
     return items
@@ -71,18 +71,18 @@ precondition templates
 
 def item_in_room_precondition(item):
     return [lambda game: game.items[item.id] in game.current_location.items,
-            lambda game: 'There is no {0} at your location.'.format(game.items[item.id].name)]
+            lambda game: 'there is no {0} at your location.'.format(game.items[item.id].name)]
 
 
 def item_accessible_precondition(item):
     return [lambda game: game.items[item.id] in game.current_location.items
                          or game.items[item.id] in game.inventory.items,
-            lambda game: 'You cannot access a {0}.'.format(game.items[item.id].name)]
+            lambda game: 'you cannot access a {0}.'.format(game.items[item.id].name)]
 
 
 def passable_precondition(portal):
     return [lambda game: passable_util(game.items[portal.id]),
-            lambda game: 'The {0} is locked.'.format(game.items[portal.id].name)]
+            lambda game: 'the {0} is locked.'.format(game.items[portal.id].name)]
 
 """
 effect templates
@@ -91,12 +91,12 @@ effect templates
 
 def room_drop_effect(item):
     return [lambda game: drop_util(game.items[item.id], game.current_location),
-            lambda game: 'You drop the {0}.'.format(game.items[item.id].name)]
+            lambda game: 'you drop the {0}.'.format(game.items[item.id].name)]
 
 
 def room_get_effect(item):
     return [lambda game: get_util(game.items[item.id], game.inventory, game.current_location),
-            lambda game: 'You get the {0}.'.format(game.items[item.id].name)]
+            lambda game: 'you get the {0}.'.format(game.items[item.id].name)]
 
 
 def access_inventory_effect():
@@ -106,18 +106,19 @@ def access_inventory_effect():
 
 def room_put_effect(item, destination):
     return [lambda game: room_put_util(game.items[item.id], game.current_location, game.items[destination.id]),
-            lambda game: 'You put the {0} in the {1}.'.format(game.items[item.id].name,
-                                                              game.items[destination.id].name)]
+            lambda game: 'you put the {0} {1} the {2}.'.format(game.items[item.id].name,
+                                                               game.items[destination.id].preposition,
+                                                               game.items[destination.id].name)]
 
 
 def open_door_effect(item):
     return [lambda game: open_door_util(game.items[item.id].door),
-            lambda game: 'You open the {0}'.format(game.items[item.id].name)]
+            lambda game: 'you open the {0}'.format(game.items[item.id].name)]
 
 
 def close_door_effect(item):
     return [lambda game: close_door_util(game.items[item.id].door),
-            lambda game: 'You close the {0}'.format(game.items[item.id].name)]
+            lambda game: 'you close the {0}'.format(game.items[item.id].name)]
 
 
 def enter_door_effect(portal):

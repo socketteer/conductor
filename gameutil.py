@@ -57,7 +57,7 @@ def look_util(containers):
         if hasattr(container, 'description'):
             print(container.description())
         else:
-            print('You see the {0}'.format(container.name))
+            print('you see the {0}'.format(container.name))
         if hasattr(container, 'items') and container.items:
             if accessible(container):
                 look_util(container.items)
@@ -65,12 +65,12 @@ def look_util(containers):
 
 def list_container_contents(container):
     if container.items:
-        description = "The {0} contains:".format(container.name)
+        description = "the {0} contains:".format(container.name)
         for item in container.items:
             description += '\n'
             description += item.name
     else:
-        description = "The {0} is empty.".format(container.name)
+        description = "the {0} is empty.".format(container.name)
     return description
 
 

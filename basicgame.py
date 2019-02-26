@@ -190,11 +190,7 @@ class Game:
                 result, msg = self.process_command(command, obj1, obj2, action_type=2)
             else:
                 raise CommandError("Too many objects in input {0}".format(user_input))
-            if not result:
-                return False
-            else:
-                print(msg)
-                return True
+            return result, msg
         except NoGenerator as e:
             print(repr(e))
             return False
@@ -210,7 +206,8 @@ class Game:
             state_change, msg = self.query_events()
             if state_change:
                 print(msg)
-            self.turn()
+            result, msg = self.turn()
+            print(msg)
 
     def query_events(self):
         state_change = 0

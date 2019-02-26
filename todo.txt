@@ -3,7 +3,6 @@ error handling
 standard item libraries
 game access time
 action duration
-x doors (separate object; belongs to portal; 1:2)
 game state representation
     saving/loading with dictionary
 parsing

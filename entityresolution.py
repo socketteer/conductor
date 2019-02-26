@@ -43,4 +43,6 @@ def resolve_phrase(word, attributes, items, lex):
         return viable[0]
     else:
         raise ResolutionAmbiguity('phrase noun={0}, attributes=[{1}] is ambiguous; could refer '
-                                  'to {2} different entities'.format(word, ' ,'.join(attributes), len(viable)))
+                                  'to {2} different entities'.format(word, ' ,'.join(attributes), len(viable)),
+                                  word,
+                                  viable)

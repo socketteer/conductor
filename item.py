@@ -52,7 +52,7 @@ class Item:
 
     def description(self):
         description = ""
-        description += 'You see {0} {1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
+        description += 'you see {0} {1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
         return description
 
 
@@ -65,6 +65,7 @@ class Container(Item):
     def description(self):
         description = Item.description(self)
         if gameutil.accessible(self):
-            for item in self.items:
-                description += ' ' + item.description()
+            description += ' {0} the {1} is {2}.'.format(self.preposition,
+                                                        self.name,
+                                                        nlgen.nlitemlist(list(self.items)))
         return description

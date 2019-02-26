@@ -38,6 +38,7 @@ class Portal(Item):
                       portable=False,
                       article=article,
                       items_dict=game.items)
+        self.add_aliases(['room', 'place', 'location', 'area', 'door', 'doorway', 'portal'])
         self.destination = destination
         self.door = door
 
@@ -197,40 +198,52 @@ class RoomGame(Game):
         self.report_state()
         user_input = input('\n>')
         msg = None
+        if not user_input:
+            return self.turn()
         try:
             command, objects = process_input(user_input, self.lexicon)
-        except ParseError as e:
-            print(repr(e))
+        except ParseError:
+            print('command not understood.')
             return self.turn()
-        command = self.lexicon.resolve(command, pos='verb')
-        if len(objects) == 0:
-            if command == 'exit':
-                quit()
-            elif command == 'pass':
-                return True
+        try:
+            command = self.lexicon.resolve(command, pos='verb')
+        except KeyError:
+            print('command not understood.')
+            return self.turn()
+        try:
+            if len(objects) == 0:
+                if command == 'exit':
+                    quit()
+                elif command == 'pass':
+                    return True
+                else:
+                    result, msg = self.exe(self.zero_operand_actions[command])
+            elif len(objects) == 1:
+                obj = resolve_phrase(objects[0].noun,
+                                     objects[0].adjectives,
+                                     self.accessible_items(),
+                                     self.lexicon)
+                result, msg = self.process_command(command, obj, action_type=1)
+            elif len(objects) == 2:
+                obj1 = resolve_phrase(objects[0].noun,
+                                      objects[0].adjectives,
+                                      self.accessible_items(),
+                                      self.lexicon)
+                obj2 = resolve_phrase(objects[1].noun,
+                                      objects[1].adjectives,
+                                      self.accessible_items(),
+                                      self.lexicon)
+                result, msg = self.process_command(command, obj1, obj2, action_type=2)
             else:
-                result, msg = self.exe(self.zero_operand_actions[command])
-        elif len(objects) == 1:
-            obj = resolve_phrase(objects[0].noun,
-                                 objects[0].adjectives,
-                                 self.accessible_items(),
-                                 self.lexicon)
-            result, msg = self.process_command(command, obj, action_type=1)
-        elif len(objects) == 2:
-            obj1 = resolve_phrase(objects[0].noun,
-                                  objects[0].adjectives,
-                                  self.accessible_items(),
-                                  self.lexicon)
-            obj2 = resolve_phrase(objects[1].noun,
-                                  objects[1].adjectives,
-                                  self.accessible_items(),
-                                  self.lexicon)
-            result, msg = self.process_command(command, obj1, obj2, action_type=2)
-        else:
-            raise CommandError("Too many objects in input {0}".format(user_input))
-        if not result:
-            return False
-        else:
-            print(msg)
-            return True
+                raise CommandError("too many objects in input {0}".format(user_input))
+        except ResolutionFailure:
+            print('you cannot do that.')
+            return self.turn()
+        except ResolutionAmbiguity as e:
+            print('which {0}?'.format(e.args[1]))
+            return self.turn()
+        except CommandError:
+            print('command not understood.')
+            return self.turn()
+        return result, msg
 

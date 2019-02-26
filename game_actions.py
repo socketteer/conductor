@@ -18,7 +18,7 @@ def get(item):
                                 'not_in_inventory': [lambda game: not item_in(game.items[item.id], game.inventory),
                                                      lambda game: "{0}{1} is in your inventory".format(game.items[item.id].article,
                                                                                                        game.items[item.id].name)],
-                                'location_accessible': location_accessible_precondition(game.items[item.id].location)},
+                                'location_accessible': location_accessible_precondition(item)},
                  effects={'get': get_effect(item)})
 
 

@@ -34,8 +34,8 @@ bath_kitchen, kitchen_bath = game.link_rooms(kitchen, downstairs_bathroom, door=
 kitchen_basement, basement_kitchen = game.link_rooms(basement, kitchen)
 kitchen_mystery, mystery_kitchen = game.link_rooms(mystery_room, kitchen)
 upstairs_foyer, foyer_upstairs = game.link_rooms(foyer, upstairs_hallway)
-game.alter_attributes(upstairs_foyer, aliases=['upstairs', 'stairs'])
-game.alter_attributes(foyer_upstairs, aliases=['downstairs', 'stairs'])
+game.alter_attributes(upstairs_foyer, aliases=['upstairs', 'stairs', 'up'])
+game.alter_attributes(foyer_upstairs, aliases=['downstairs', 'stairs', 'down'])
 
 hallway_bathroom, bathroom_hallway = game.link_rooms(upstairs_bathroom, upstairs_hallway)
 hallway_sbr, sbr_hallway = game.link_rooms(small_bedroom, upstairs_hallway)

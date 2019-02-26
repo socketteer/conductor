@@ -67,3 +67,4 @@ def close(item):
                      effects={'close': close_door_effect(item)})
     else:
         return game_actions.close(item)
+
