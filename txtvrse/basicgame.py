@@ -1,5 +1,6 @@
 import txtvrse
 
+
 class CommandError(Exception):
     pass
 
@@ -26,7 +27,7 @@ class Game:
         print(self.one_operand_actions)
         print(self.two_operand_actions)
         print(self.zero_operand_actions)
-        #self.lexicon.print_lexicon()
+        # self.lexicon.print_lexicon()
 
     '''def step_debug(self):
         print('current location: {0}'.format(self.current_location.name))
@@ -40,7 +41,8 @@ class Game:
         self.one_operand_actions = {}
         self.two_operand_actions = {}
         self.zero_operand_actions['look'] = txtvrse.Event(preconditions={},
-                                                  effects={'look': [lambda: game.look_util(self.containers.values()), '']})
+                                                          effects={'look': [
+                                                              lambda: txtvrse.look_util(self.containers.values()), '']})
 
     def init_actions(self):
         self.add_action('put', txtvrse.put, 2)
@@ -78,7 +80,8 @@ class Game:
             if location:
                 txtvrse.put_util(item, self.containers[location])
         except KeyError:
-            raise OperationError('{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
+            raise OperationError(
+                '{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
         self.update_lexicon(item)
 
     def update_lexicon(self, item):
@@ -146,8 +149,9 @@ class Game:
                     return act
                 else:
                     try:
-                        self.two_operand_actions[action][target1.id][target2.id] = self.action_generators[action](target1,
-                                                                                                            target2)
+                        self.two_operand_actions[action][target1.id][target2.id] = self.action_generators[action](
+                            target1,
+                            target2)
                         act = self.two_operand_actions[action][target1.id][target2.id]
                         return act
                     except KeyError:
@@ -160,7 +164,7 @@ class Game:
 
     def turn(self):
         try:
-            #self.step_debug()
+            # self.step_debug()
             user_input = input('\n>')
             try:
                 command, objects = txtvrse.process_input(user_input, self.lexicon)

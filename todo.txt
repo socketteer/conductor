@@ -3,6 +3,8 @@ error handling
 standard item libraries
 game access time
 action duration
+custom interactions --
+    auto event overrides for entity classes
 game state representation
     saving/loading with dictionary
 parsing
@@ -14,4 +16,4 @@ global vs local events
     room events
 active objects
 dialogue system
-organize directory
+planning agents

@@ -1,34 +1,35 @@
-import txtvrse.item
+import txtvrse
+
 
 class Room(txtvrse.item.Container):
     def __init__(self, game, name, id='auto', article='the'):
         # TODO two word names
         txtvrse.item.Container.__init__(self,
-                           name,
-                           id=id,
-                           portable=False,
-                           article=article,
-                           items_dict=game.items)
+                                        name,
+                                        id=id,
+                                        portable=False,
+                                        article=article,
+                                        items_dict=game.items)
         self.items.add(self)
         self.floor = txtvrse.item.Container('{0}_floor'.format(self.name),
-                               preposition='on',
-                               items_dict=game.items)
+                                            preposition='on',
+                                            items_dict=game.items)
         self.floor.add_aliases(['floor', 'ground'])
         self.items.add(self.floor)
         self.walls = txtvrse.item.Container('{0}_walls'.format(self.name),
-                               preposition='on',
-                               items_dict=game.items)
+                                            preposition='on',
+                                            items_dict=game.items)
         self.items.add(self.walls)
 
 
 class Portal(txtvrse.item.Item):
     def __init__(self, game, name, destination, door=None, id='auto', article='the'):
         txtvrse.item.Item.__init__(self,
-                      name,
-                      id=id,
-                      portable=False,
-                      article=article,
-                      items_dict=game.items)
+                                   name,
+                                   id=id,
+                                   portable=False,
+                                   article=article,
+                                   items_dict=game.items)
         self.add_aliases(['room', 'place', 'location', 'area', 'door', 'doorway', 'portal'])
         self.destination = destination
         self.door = door
@@ -37,11 +38,11 @@ class Portal(txtvrse.item.Item):
 class Door(txtvrse.item.Item):
     def __init__(self, game, name, open=False, locked=False, id='auto', article='auto'):
         txtvrse.item.Item.__init__(self,
-                      name,
-                      id=id,
-                      portable=False,
-                      article=article,
-                      items_dict=game.items)
+                                   name,
+                                   id=id,
+                                   portable=False,
+                                   article=article,
+                                   items_dict=game.items)
         self.open = open
         self.locked = locked
 
@@ -58,20 +59,22 @@ class RoomGame(txtvrse.basicgame.Game):
         self.one_operand_actions = {}
         self.two_operand_actions = {}
         self.zero_operand_actions['look'] = txtvrse.Event(preconditions={},
-                                                  effects={'look': [lambda game: None,
-                                                                    lambda game: txtvrse.room_look_util(game.current_location)]})
+                                                          effects={'look': [lambda game: None,
+                                                                            lambda game: txtvrse.room_look_util(
+                                                                                game.current_location)]})
 
     def init_game_items(self):
         self.inventory = self.create_item('inventory', container=True)
         self.zero_operand_actions['inventory'] = txtvrse.Event(preconditions={},
-                                                       effects={'inventory': txtvrse.access_inventory_effect()})
+                                                               effects={'inventory': txtvrse.access_inventory_effect()})
         self.current_location = None
 
     def init_game_state(self, current_location):
         try:
             self.current_location = current_location
         except KeyError:
-            raise txtvrse.OperationError('{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location.name))
+            raise txtvrse.OperationError(
+                '{0}.init_game_state ERROR: room {1} does not exist in game'.format(type(self), current_location.name))
 
     def init_actions(self):
         self.add_action('put', txtvrse.room_actions.put, 2)
@@ -101,17 +104,17 @@ class RoomGame(txtvrse.basicgame.Game):
                     id='auto'):
         if container:
             item = txtvrse.Container(name,
-                             id=id,
-                             preposition=preposition,
-                             portable=portable,
-                             article=article,
-                             items_dict=self.items)
+                                     id=id,
+                                     preposition=preposition,
+                                     portable=portable,
+                                     article=article,
+                                     items_dict=self.items)
         else:
             item = txtvrse.Item(name,
-                        id=id,
-                        portable=portable,
-                        article=article,
-                        items_dict=self.items)
+                                id=id,
+                                portable=portable,
+                                article=article,
+                                items_dict=self.items)
         self.add_item(item, room, location)
         return item
 
@@ -124,7 +127,8 @@ class RoomGame(txtvrse.basicgame.Game):
                 else:
                     txtvrse.put_util(item, room.floor)
             except KeyError:
-                raise txtvrse.OperationError('{0}.add_item ERROR: location {1} not in self.items'.format(type(self), location.id))
+                raise txtvrse.OperationError(
+                    '{0}.add_item ERROR: location {1} not in self.items'.format(type(self), location.id))
         self.items[item.id] = item
         self.update_lexicon(item)
         return item
@@ -211,19 +215,19 @@ class RoomGame(txtvrse.basicgame.Game):
                     result, msg = self.exe(self.zero_operand_actions[command])
             elif len(objects) == 1:
                 obj = txtvrse.resolve_phrase(objects[0].noun,
-                                     objects[0].adjectives,
-                                     self.accessible_items(),
-                                     self.lexicon)
+                                             objects[0].adjectives,
+                                             self.accessible_items(),
+                                             self.lexicon)
                 result, msg = self.process_command(command, obj, action_type=1)
             elif len(objects) == 2:
                 obj1 = txtvrse.resolve_phrase(objects[0].noun,
-                                      objects[0].adjectives,
-                                      self.accessible_items(),
-                                      self.lexicon)
+                                              objects[0].adjectives,
+                                              self.accessible_items(),
+                                              self.lexicon)
                 obj2 = txtvrse.resolve_phrase(objects[1].noun,
-                                      objects[1].adjectives,
-                                      self.accessible_items(),
-                                      self.lexicon)
+                                              objects[1].adjectives,
+                                              self.accessible_items(),
+                                              self.lexicon)
                 result, msg = self.process_command(command, obj1, obj2, action_type=2)
             else:
                 raise txtvrse.CommandError("too many objects in input {0}".format(user_input))
@@ -237,4 +241,3 @@ class RoomGame(txtvrse.basicgame.Game):
             print('command not understood.')
             return self.turn()
         return result, msg
-

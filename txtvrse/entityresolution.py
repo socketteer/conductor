@@ -1,4 +1,3 @@
-import txtvrse
 
 class ResolutionFailure(Exception):
     pass

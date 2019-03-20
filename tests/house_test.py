@@ -1,8 +1,8 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import txtvrse
-
 
 housegame = txtvrse.room.RoomGame()
 housegame.load_lexicon(verb_file='txtvrse/wordmappings')
@@ -22,9 +22,9 @@ medium_bedroom = housegame.create_room('bedroom')
 large_bedroom = housegame.create_room('bedroom')
 garage = housegame.create_room('garage')
 shoes = housegame.create_item('shoes',
-                         room=foyer,
-                         article="",
-                         portable=True)
+                              room=foyer,
+                              article="",
+                              portable=True)
 housegame.alter_attributes(shoes, aliases=['boots', 'footwear'], attributes=['stinky'])
 
 kitchen_foyer, foyer_kitchen = housegame.link_rooms(foyer, kitchen)
@@ -46,11 +46,10 @@ hallway_lbr, lbr_hallway = housegame.link_rooms(large_bedroom, upstairs_hallway)
 fridge = housegame.add_item(txtvrse.catalogue.Refrigerator(items_dict=housegame.items), room=kitchen)
 housegame.alter_attributes(fridge, attributes=['white', 'big'])
 cheese = housegame.create_item('cheese',
-                          room=kitchen,
-                          location=fridge,
-                          portable=True)
+                               room=kitchen,
+                               location=fridge,
+                               portable=True)
 counter = housegame.add_item(txtvrse.catalogue.Counter(items_dict=housegame.items), room=kitchen)
-
 
 go_upstairs = housegame.generate_action('go', upstairs_foyer)
 go_downstairs = housegame.generate_action('go', foyer_upstairs)
@@ -58,7 +57,5 @@ go_downstairs = housegame.generate_action('go', foyer_upstairs)
 go_upstairs.effects['change_location'][1] = lambda game: "You go upstairs."
 go_downstairs.effects['change_location'][1] = lambda game: "You go downstairs."
 
-
 housegame.init_game_state(foyer)
 housegame.run()
-
