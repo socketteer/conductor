@@ -1,6 +1,7 @@
 import sys
 
 from .basicgame import *
+from .item import *
 from .room import *
 from .roomutil import *
 from .gameutil import *
@@ -14,4 +15,3 @@ from .parse import *
 from .nlgen import *
 from .narrative import *
 from .entityresolution import *
-from .item import *

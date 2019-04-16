@@ -7,22 +7,22 @@ class InitError(Exception):
 # TODO game param instead of items_dict
 
 class Item:
-    def __init__(self, name, portable=True, id='auto', article='auto', items_dict=-1):
+    def __init__(self, name, portable=True, id='auto', article='auto', game=-1):
         self.name = name
         self.aliases = {'thing', 'object', 'item'}
         self.aliases.add(name)
         self.portable = portable
         self.attributes = set()
         self.assign_article(article)
-        self.assign_id(id, items_dict)
+        self.assign_id(id, game)
 
-    def assign_id(self, id, items_dict):
+    def assign_id(self, id, game):
         if id == 'auto':
-            if items_dict == -1:
-                raise InitError("for auto id assignment, need to pass items")
+            if game == -1:
+                raise InitError("for auto id assignment, need to pass game")
             else:
                 i = 1
-                while self.name + str(i) in items_dict:
+                while self.name + str(i) in game.items:
                     i += 1
                 self.id = self.name + str(i)
         else:
@@ -55,10 +55,13 @@ class Item:
         description += 'you see {0} {1}{2}.'.format(self.article, ', '.join(self.attributes) + ' ', self.name)
         return description
 
+    def modify_game(self, game):
+        pass
+
 
 class Container(Item):
-    def __init__(self, name, id='auto', preposition='in', portable=False, article='a', items_dict=-1):
-        Item.__init__(self, name=name, id=id, portable=portable, article=article, items_dict=items_dict)
+    def __init__(self, name, id='auto', preposition='in', portable=False, article='a', game=-1):
+        Item.__init__(self, name=name, id=id, portable=portable, article=article, game=game)
         self.items = set()
         self.preposition = preposition
 

@@ -43,13 +43,26 @@ hallway_sbr, sbr_hallway = housegame.link_rooms(small_bedroom, upstairs_hallway)
 hallway_mbr, mbr_hallway = housegame.link_rooms(medium_bedroom, upstairs_hallway)
 hallway_lbr, lbr_hallway = housegame.link_rooms(large_bedroom, upstairs_hallway)
 
-fridge = housegame.add_item(txtvrse.catalogue.Refrigerator(items_dict=housegame.items), room=kitchen)
+
+'''
+POPULATE KITCHEN
+'''
+
+fridge = housegame.add_item(txtvrse.catalogue.Refrigerator(game=housegame), room=kitchen)
 housegame.alter_attributes(fridge, attributes=['white', 'big'])
 cheese = housegame.create_item('cheese',
                                room=kitchen,
                                location=fridge,
                                portable=True)
-counter = housegame.add_item(txtvrse.catalogue.Counter(items_dict=housegame.items), room=kitchen)
+counter = housegame.add_item(txtvrse.catalogue.Counter(game=housegame), room=kitchen)
+
+
+'''POPULATE FOYER'''
+bookshelf = housegame.add_item(txtvrse.catalogue.Bookcase(game=housegame), room=foyer)
+book = housegame.add_item(txtvrse.catalogue.Book(text="book text", game=housegame), room=foyer, location=bookshelf)
+
+
+
 
 go_upstairs = housegame.generate_action('go', upstairs_foyer)
 go_downstairs = housegame.generate_action('go', foyer_upstairs)
@@ -57,5 +70,11 @@ go_downstairs = housegame.generate_action('go', foyer_upstairs)
 go_upstairs.effects['change_location'][1] = lambda game: "You go upstairs."
 go_downstairs.effects['change_location'][1] = lambda game: "You go downstairs."
 
+
+
 housegame.init_game_state(foyer)
+
+#print(housegame.one_operand_actions['read']['book1'])
+#print(housegame.one_operand_actions['look']['bookcase1'])
+housegame.print_debugging_info()
 housegame.run()

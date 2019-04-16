@@ -9,16 +9,16 @@ class Room(txtvrse.item.Container):
                                         id=id,
                                         portable=False,
                                         article=article,
-                                        items_dict=game.items)
+                                        game=game)
         self.items.add(self)
         self.floor = txtvrse.item.Container('{0}_floor'.format(self.name),
                                             preposition='on',
-                                            items_dict=game.items)
+                                            game=game)
         self.floor.add_aliases(['floor', 'ground'])
         self.items.add(self.floor)
         self.walls = txtvrse.item.Container('{0}_walls'.format(self.name),
                                             preposition='on',
-                                            items_dict=game.items)
+                                            game=game)
         self.items.add(self.walls)
 
 
@@ -29,7 +29,7 @@ class Portal(txtvrse.item.Item):
                                    id=id,
                                    portable=False,
                                    article=article,
-                                   items_dict=game.items)
+                                   game=game)
         self.add_aliases(['room', 'place', 'location', 'area', 'door', 'doorway', 'portal'])
         self.destination = destination
         self.door = door
@@ -42,7 +42,7 @@ class Door(txtvrse.item.Item):
                                    id=id,
                                    portable=False,
                                    article=article,
-                                   items_dict=game.items)
+                                   game=game)
         self.open = open
         self.locked = locked
 
@@ -108,13 +108,13 @@ class RoomGame(txtvrse.basicgame.Game):
                                      preposition=preposition,
                                      portable=portable,
                                      article=article,
-                                     items_dict=self.items)
+                                     game=self)
         else:
             item = txtvrse.Item(name,
                                 id=id,
                                 portable=portable,
                                 article=article,
-                                items_dict=self.items)
+                                game=self)
         self.add_item(item, room, location)
         return item
 
@@ -131,6 +131,7 @@ class RoomGame(txtvrse.basicgame.Game):
                     '{0}.add_item ERROR: location {1} not in self.items'.format(type(self), location.id))
         self.items[item.id] = item
         self.update_lexicon(item)
+        item.modify_game(self)
         return item
 
     def create_room(self, name):

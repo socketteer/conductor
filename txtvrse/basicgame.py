@@ -66,9 +66,9 @@ class Game:
 
     def create_item(self, name, location=None, container=False, preposition='in', article='auto'):
         if container:
-            item = txtvrse.Container(name, preposition, article=article, items_dict=self.items)
+            item = txtvrse.Container(name, preposition, article=article, game=self)
         else:
-            item = txtvrse.Item(name, article=article, items_dict=self.items)
+            item = txtvrse.Item(name, article=article, game=self)
         self.add_item(item, location, container)
         return item
 
@@ -83,6 +83,7 @@ class Game:
             raise OperationError(
                 '{0}.create_item ERROR: location {1} not in self.containers'.format(type(self), location))
         self.update_lexicon(item)
+        item.modify_game(self)
 
     def update_lexicon(self, item):
         self.lexicon.add_word(item.name, pos='noun')
@@ -102,6 +103,8 @@ class Game:
         else:
             raise OperationError('{0}.add_action ERROR: invalid action_type {1}'.format(type(self), action_type))
         self.action_generators[action_name] = action_generator
+        self.lexicon.add_word(action_name, pos='verb')
+        return action_generator
 
     def generate_actions(self):
         for item_id, item in self.items.items():
@@ -157,6 +160,26 @@ class Game:
                     except KeyError:
                         self.two_operand_actions[action][target1.id] = {}
                         return self.generate_action(action, target1, target2, action_type)
+            except AttributeError as e:
+                raise AttributeError('Invalid type for action')
+        else:
+            return None
+
+    def overload_action(self, action, target1, new_event, target2=None, action_type=1):
+        if action in self.action_generators:
+            try:
+                if action_type == 1:
+                    self.one_operand_actions[action][target1.id] = new_event
+                    act = self.one_operand_actions[action][target1.id]
+                    return act
+                else:
+                    try:
+                        self.two_operand_actions[action][target1.id][target2.id] = new_event
+                        act = self.two_operand_actions[action][target1.id][target2.id]
+                        return act
+                    except KeyError:
+                        self.two_operand_actions[action][target1.id] = {}
+                        return self.overload_action(action, target1, target2, new_event, action_type)
             except AttributeError as e:
                 raise AttributeError('Invalid type for action')
         else:
