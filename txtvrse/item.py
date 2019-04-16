@@ -4,7 +4,6 @@ import txtvrse
 class InitError(Exception):
     pass
 
-# TODO game param instead of items_dict
 
 class Item:
     def __init__(self, name, portable=True, id='auto', article='auto', game=-1):
@@ -67,7 +66,7 @@ class Container(Item):
 
     def description(self):
         description = Item.description(self)
-        if txtvrse.accessible(self):
+        if txtvrse.accessible(self) and self.items:
             description += ' {0} the {1} is {2}.'.format(self.preposition,
                                                          self.name,
                                                          txtvrse.nlitemlist(list(self.items)))

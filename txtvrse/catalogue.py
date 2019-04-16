@@ -2,8 +2,7 @@ import txtvrse.item
 
 
 def read(item):
-    return txtvrse.Event(preconditions={'item_in_room': txtvrse.item_in_room_precondition(item),
-                                        'location_accessible': txtvrse.location_accessible_precondition(item)},
+    return txtvrse.Event(preconditions={'item_accessible': txtvrse.item_accessible_precondition(item)},
                          effects={'read': [lambda game: None, lambda game: item.text]})
 
 

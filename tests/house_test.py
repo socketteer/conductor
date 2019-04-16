@@ -21,11 +21,7 @@ upstairs_bathroom = housegame.create_room('bathroom')
 medium_bedroom = housegame.create_room('bedroom')
 large_bedroom = housegame.create_room('bedroom')
 garage = housegame.create_room('garage')
-shoes = housegame.create_item('shoes',
-                              room=foyer,
-                              article="",
-                              portable=True)
-housegame.alter_attributes(shoes, aliases=['boots', 'footwear'], attributes=['stinky'])
+
 
 kitchen_foyer, foyer_kitchen = housegame.link_rooms(foyer, kitchen)
 living_foyer, foyer_living = housegame.link_rooms(foyer, living_room)
@@ -43,12 +39,13 @@ hallway_sbr, sbr_hallway = housegame.link_rooms(small_bedroom, upstairs_hallway)
 hallway_mbr, mbr_hallway = housegame.link_rooms(medium_bedroom, upstairs_hallway)
 hallway_lbr, lbr_hallway = housegame.link_rooms(large_bedroom, upstairs_hallway)
 
-
 '''
-POPULATE KITCHEN
+KITCHEN
 '''
 
 fridge = housegame.add_item(txtvrse.catalogue.Refrigerator(game=housegame), room=kitchen)
+freezer_chest = housegame.add_item(txtvrse.catalogue.Refrigerator(name='freezer', game=housegame), room=kitchen)
+
 housegame.alter_attributes(fridge, attributes=['white', 'big'])
 cheese = housegame.create_item('cheese',
                                room=kitchen,
@@ -56,13 +53,36 @@ cheese = housegame.create_item('cheese',
                                portable=True)
 counter = housegame.add_item(txtvrse.catalogue.Counter(game=housegame), room=kitchen)
 
-
-'''POPULATE FOYER'''
+'''
+FOYER
+'''
 bookshelf = housegame.add_item(txtvrse.catalogue.Bookcase(game=housegame), room=foyer)
-book = housegame.add_item(txtvrse.catalogue.Book(text="book text", game=housegame), room=foyer, location=bookshelf)
+book1 = housegame.add_item(txtvrse.catalogue.Book(name='mathbook', text="math sux", game=housegame), room=foyer, location=bookshelf)
+book1 = housegame.add_item(txtvrse.catalogue.Book(name='historybook', text="history sux", game=housegame), room=foyer, location=bookshelf)
 
+statue = housegame.create_item('statue',
+                               room=foyer,
+                               portable=False)
+drum = housegame.create_item('drum',
+                             room=foyer,
+                             portable=False)
+shoes = housegame.create_item('shoes',
+                              room=foyer,
+                              article="",
+                              portable=True)
+housegame.alter_attributes(shoes, aliases=['boots', 'footwear'], attributes=['stinky'])
 
+'''
+LIVING ROOM
+'''
 
+'''
+DINING ROOM
+'''
+
+'''
+MYSTERY ROOM
+'''
 
 go_upstairs = housegame.generate_action('go', upstairs_foyer)
 go_downstairs = housegame.generate_action('go', foyer_upstairs)
@@ -70,11 +90,9 @@ go_downstairs = housegame.generate_action('go', foyer_upstairs)
 go_upstairs.effects['change_location'][1] = lambda game: "You go upstairs."
 go_downstairs.effects['change_location'][1] = lambda game: "You go downstairs."
 
-
-
 housegame.init_game_state(foyer)
 
-#print(housegame.one_operand_actions['read']['book1'])
-#print(housegame.one_operand_actions['look']['bookcase1'])
+# print(housegame.one_operand_actions['read']['book1'])
+# print(housegame.one_operand_actions['look']['bookcase1'])
 housegame.print_debugging_info()
 housegame.run()
